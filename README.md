@@ -64,7 +64,7 @@ Enter the IP address of your television in the ipaddress field. On your TV go to
 
 ### Home APP
 
-To create a "Home APP" put following in terminal to get the uri of your choosen app:
+To create a "Home APP" put following in terminal to get uri of the you want set as Home App:
 
 - ```curl -XPOST http://TVIPHERE/sony/appControl -d '{"id":2,"method":"getApplicationList","version":"1.0","params":["1.0"]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[]'```
 
