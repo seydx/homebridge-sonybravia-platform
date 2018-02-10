@@ -91,6 +91,7 @@ If you want to set up a CEC device and need the Name (label), Port (port) and Lo
 | name | no | Name for the Platform. |
 | ipadress | Yes | IP adress from your Sony Bravia TV |
 | psk | Yes | Your Pre Shared Key |
+| homeapp | Yes | Cause it is not possible to "shutting down" or "deactivate" a HDMI Input or CEC, the homeapp will be activated instead - App installed on the Sony TV |
 | tvSwitch | No | Exposes a Switch for the TV (Default: true) |
 | polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
