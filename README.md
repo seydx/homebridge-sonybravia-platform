@@ -59,7 +59,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 
 ### IP Adress and PSK
 
-Enter the IP address of your television in the ipaddress field. On your TV go to Settings->Network->Home network->IP Control. Change Authentication to "Normal and Pre-Shared Key". Enter something for the Pre-Shared Key. Put that same string in the pskfield.
+Enter the IP address of your television in the ipaddress field. On your TV go to Settings->Network->Home network->IP Control. Change Authentication to "Normal and Pre-Shared Key". Enter something for the Pre-Shared Key. Put that same string in the psk field.
 
 
 ### Home APP
