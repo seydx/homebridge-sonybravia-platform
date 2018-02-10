@@ -64,22 +64,22 @@ Enter the IP address of your television in the ipaddress field. On your TV go to
 
 ### Home APP
 
-To create a "Home APP" put following in terminal to get uri of the you want set as Home App:
+To create a "Home APP" (config.json -> homeapp) put following in terminal to get the adress of the app you want set as Home App:
 
 - ```curl -XPOST http://TVIPHERE/sony/appControl -d '{"id":2,"method":"getApplicationList","version":"1.0","params":["1.0"]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[]'```
 
-- This will return a list of Apps installed on your TV, just search for the app you will as "Home APP" and copy the "uri" - Example: com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity
+- This will return a list of Apps installed on your TV, just search for the app you will as "Home APP" and copy the adress - Example: com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity
 
 
 ### CEC Device
 
-If you want to set up a CEC device and need the Name (label), Port (port) and Logical Address (logaddr) do this steps:
+If you want to set up a CEC device and need the Name (label), Port (port) and Logical Address (logaddr) do following steps:
 
 1. TURN ON the TV
 
 2. ```curl -XPOST http://TVIPHERE/sony/avContent -d '{"id":2,"method":"getCurrentExternalInputsStatus","version":"1.0","params":["1.0"]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[]'```
 
-3. You will get a list of source inputs, search for your CEC device like Apple TV. The "port" and "logaddr" is in the "uri", so if your "uri" is "extInput:cec?type=player&port=3&logicalAddr=4" then your port is 3 and logaddr is 4, the "title" is your "label" for the config.json
+3. You will get a list of source inputs, search for your "CEC" device like Apple TV. The "port" and "logaddr" (needed for config.json) is in the adress, in the list defined as "uri", so if your "uri" is "extInput:cec?type=player&port=3&logicalAddr=4" then your port is 3 and logaddr is 4, the "label" (also needed for config.json) is in the list defined as "title"
 
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/edit/master/config-example.json) for more details.
 
@@ -96,12 +96,19 @@ If you want to set up a CEC device and need the Name (label), Port (port) and Lo
 | polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
 | cecs | No | When you write "CEC's" in the config.json, the plugin will not just expose the HDMI inputs, it also controls whether one of the "CECs" in config.json is plugged into the HDMI input. If "yes" so it will expose the CEC, if "no" it will only expose the HDMI-Input |
+| label | Yes (only if created a cec) | Is the name of your CEC Device (i.e. Apple TV)|
+| port | Yes (only if created a cec) | HDMI port of the CEC device |
+| logaddr | Yes (only if created a cec) | Logical Adress of the CEC device |
 
 
 ## Known issues | TODO
 
-- At the moment it is not possible to deactivate a CEC or shutting it down, this plugin activates the "Home APP" setted in config.json instead
+- ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
 
+- TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
+- TODO: function to volume up/down 
+- TODO: function to switch between apps
+- TODO: function to switch between channels
 
 
 ## Contributing
