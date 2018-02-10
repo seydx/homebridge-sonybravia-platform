@@ -1,0 +1,37 @@
+{
+  "name": "homebridge-sonybravia-platform",
+  "version": "1.0.0",
+  "description": "homebridge-sonybravia-platform",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeydX/homebridge-sonybravia-platform.git"
+  },
+  "author": "SeydX (https://github.com/SeydX/homebridge-sonybravia-platform)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SeydX/homebridge-sonybravia-platform/issues"
+  },
+  "homepage": "https://github.com/SeydX/homebridge-sonybravia-platform#readme",
+  "keywords": [
+    "sony",
+    "bravia",
+    "homebridge",
+    "homebridge-plugin",
+    "plugin",
+    "tv"
+  ],
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "dependencies": {
+    "async": "*",
+    "request-promise": "^4.2.2",
+    "request":"*"
+  }
+}
