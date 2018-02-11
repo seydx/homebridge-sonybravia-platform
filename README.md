@@ -85,20 +85,40 @@ If you want to set up a CEC device and need the Name (label), Port (port) and Lo
 
 
 ## Options
+Following are tables to see which keys/values are required and which are optional for the config.json
+
+### BASE (required)
+If you put only required lines into your config.json, you will only get the HDMI Inputs withouts CEC functionality, Apps etc.
+
+| Attributes | Required | Usage |
+|------------|----------|-------|
+| ipadress | Yes | IP adress from your Sony Bravia TV |
+| psk | Yes | Your Pre Shared Key |
+| homeapp | Yes | Cause it is not possible to "shutting down" or "deactivate" a HDMI Input or CEC, the homeapp will be activated instead - App installed on the Sony TV |
+
+### OPTIONAL (not required)
+If you put all optional lines, you will get CEC possiblity, Apps etc
 
 | Attributes | Required | Usage |
 |------------|----------|-------|
 | name | no | Name for the Platform. |
-| ipadress | Yes | IP adress from your Sony Bravia TV |
-| psk | Yes | Your Pre Shared Key |
-| homeapp | Yes | Cause it is not possible to "shutting down" or "deactivate" a HDMI Input or CEC, the homeapp will be activated instead - App installed on the Sony TV |
 | tvSwitch | No | Exposes a Switch for the TV (Default: true) |
 | polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
-| cecs | No | When you write "CEC's" in the config.json, the plugin will not just expose the HDMI inputs, it also controls whether one of the "CECs" in config.json is plugged into the HDMI input. If "yes" so it will expose the CEC, if "no" it will only expose the HDMI-Input |
+
+### OPTIONAL for CEC (not required)
+| Attributes | Required | Usage |
+|------------|----------|-------|
+| cecs | No | By putting "cec" into your config.json, the plugin will not just expose the HDMI inputs, it also controls whether one of the "cec" in config.json is plugged into the HDMI input. If "yes" so it will expose the CEC, if "no" it will only expose the HDMI-Input |
 | label | Yes (only if created a cec) | Is the name of your CEC Device (i.e. Apple TV)|
 | port | Yes (only if created a cec) | HDMI port of the CEC device |
 | logaddr | Yes (only if created a cec) | Logical Adress of the CEC device |
+
+### OPTIONAL for APPS (not required)
+| Attributes | Required | Usage |
+|------------|----------|-------|
+| apps | No | By putting "apps" into your config.json, this plugin will expose them to HomeKit |
+| appName | Yes (only if created a app) | Is the name of your App (i.e. YouTube)|
 
 
 ## Known issues | TODO
@@ -107,7 +127,7 @@ If you want to set up a CEC device and need the Name (label), Port (port) and Lo
 
 - TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
 - TODO: function to volume up/down 
-- TODO: function to switch between apps
+- ~~TODO: function to switch between apps~~
 - TODO: function to switch between channels
 
 
