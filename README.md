@@ -40,17 +40,12 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "tvSwitch": true,
   "polling":true,
   "interval": 2,
-  "cecs":[
-    {
-      "label":"Apple TV",
-      "logaddr":8,
-      "port":2
-    },
-    {
-      "label":"PlayStation 4",
-      "logaddr":4,
-      "port":3
-    }
+  "cecs":[{"label":"Apple TV","logaddr":8,"port":2},
+          {"label":"PlayStation 4","logaddr":4,"port":3}
+  ],
+  "apps":[{"appName":"YouTube"},
+          {"appName":"Kodi"},
+          {"appName":"Smart IPTV"},
   ]
  }
  ]
