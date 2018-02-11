@@ -104,7 +104,7 @@ If you put all optional lines, you will get CEC possiblity, Apps etc
 ### OPTIONAL for CEC (not required)
 | Attributes | Required | Usage |
 |------------|----------|-------|
-| cecs | No | By putting "cec" into your config.json, this plugin will expose the HDMI Input of the device with cec functionality |
+| cecs | No | By putting "cec" into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
 | label | Yes (only if created a cec) | Is the name of your CEC Device (i.e. Apple TV)|
 | port | Yes (only if created a cec) | HDMI port of the CEC device |
 | logaddr | Yes (only if created a cec) | Logical Adress of the CEC device |
