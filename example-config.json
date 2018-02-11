@@ -15,17 +15,12 @@
   "tvSwitch": true,
   "polling":true,
   "interval": 2,
-  "cecs":[
-    {
-      "label":"Apple TV",
-      "logaddr":8,
-      "port":2
-    },
-    {
-      "label":"PlayStation 4",
-      "logaddr":4,
-      "port":3
-    }
+  "cecs":[{"label":"Apple TV","logaddr":8,"port":2},
+         {"label":"PlayStation 4","logaddr":4,"port":3}
+  ],
+  "apps":[{"appName":"YouTube"},
+          {"appName":"Smart IPTV"},
+          {"appName":"Kodi"}
   ]
  }
  ]
