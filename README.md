@@ -1,10 +1,10 @@
-# Homebridge Plugin for Sony Bravia TV
+# Homebridge Platform Plugin for Sony Bravia Android TV
 
-A plugin that exposes all HDMI Inputs to HomeKit via [Homebridge](https://github.com/nfarina/homebridge). It can also detect CEC devices like Apple TV or Playstation to activate them via HomeKit.
+This is a plugin for [Homebridge](https://github.com/nfarina/homebridge) that can expose a Power Switch, Apps installed TV, all HDMI inputs from your TV to Apple HomeKit. It can also detect CEC devices like Apple TV or PlayStation 4 and controll them. So it is possible to turn on your Apple TV or PlayStation etc. with polling to create awesome automations.
 
 ## Why do we need this plugin?
 
-With this plugin you can expose the HDMI inputs to HomeKit as "Switches". It's also possible to create a CEC list to activate devices like Apple TV or PlayStation that are plugged in.
+With this plugin you can expose a power switch to controll the power of your TV (on/off) , Switches for Apps installed on your TV (names must be defined in the config file to expose them), Switches for the TV Inputs (HDMI) and also for your CEC devices (must be defined in the config file to expose them) that are plugged in like Apple TV or PlayStation etc. So it will be possible to controll these devices (at the moment only powering on and changing input). More functions will come very soon! 
 
 See [Images](https://github.com/SeydX/homebridge-sonybravia-platform/tree/master/images/) for more details.
 
@@ -15,10 +15,13 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 
 -  ```sudo npm install -g homebridge-sonybravia-platform```
 - ```sudo apt-get install jq```
- 
-- Set "Remote start" to ON in your Android TV Settings->Network->Remote Start
-- Change "Authentication" to "Normal and Pre-Shared Key" in your Android Settings->Network->IP Control->Authentication
-- Enter a "Pre-Shared Key" in your Android TV Settings->Network->IP control->Pre-Shared Key
+
+
+## Preparing the TV
+
+- Set "Remote start" to ON in your Android TV Settings -> Network -> Remote Start
+- Change "Authentication" to "Normal and Pre-Shared Key" in your Android Settings -> Network -> IP Control -> Authentication
+- Enter a "Pre-Shared Key" in your Android TV Settings -> Network -> IP control -> Pre-Shared Key
  
 ## Example config.json:
 
@@ -40,41 +43,54 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "tvSwitch": true,
   "polling":true,
   "interval": 2,
-  "cecs":[{"label":"Apple TV","logaddr":8,"port":2},
-          {"label":"PlayStation 4","logaddr":4,"port":3}
+  "cecs":
+  [
+   {
+    "label":"Apple TV",
+    "logaddr":8,"port":2
+   },
+   {
+    "label":"PlayStation 4",
+    "logaddr":4,"port":3
+   }
   ],
-  "apps":[{"appName":"YouTube"},
-          {"appName":"Kodi"},
-          {"appName":"Smart IPTV"},
+  "apps":
+  [
+   {
+    "appName":"YouTube"
+   },
+   {
+    "appName":"Kodi"
+   },
+   {
+    "appName":"Smart IPTV"
+   },
   ]
  }
- ]
+]
 }
 ```
 
-### IP Adress and PSK
-
-Enter the IP address of your television in the ipaddress field. On your TV go to Settings->Network->Home network->IP Control. Change Authentication to "Normal and Pre-Shared Key". Enter something for the Pre-Shared Key. Put that same string in the psk field.
-
-
 ### Home APP
 
-To create a "Home APP" (config.json -> homeapp) put following in terminal to get the adress of the app you want set as Home App:
+Home App is a on the TV installed app that must be defined in the config.json file. Due to the reason that it makes no sense and also not possible to **deactivate** a HDMI input this App will start instead. So if you switch off an HDMI, the input will change from HDMI to the Home App (_in my case it is a IPTV app_)
+
+With the following command for terminal you will get list of apps that are installed on your TV:
 
 - ```curl -XPOST http://TVIPHERE/sony/appControl -d '{"id":2,"method":"getApplicationList","version":"1.0","params":["1.0"]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[]'```
 
-- This will return a list of Apps installed on your TV, just search for the app you will as "Home APP" and copy the adress - Example: com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity
+Just search your app and copy the adress of the coosen app. This is an example adress for my IPTV: com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity
 
 
 ### CEC Device
 
-If you want to set up a CEC device and need the Name (label), Port (port) and Logical Address (logaddr) do following steps:
+If you dont want only HDMI inputs without special functional, you can also put your CEC devices that are plugged in on the tv to create HDMI switches with cec controlling functionality. To do these, it is important to get the port and the logical adress of the device. Do following steps:
 
 1. TURN ON the TV
 
 2. ```curl -XPOST http://TVIPHERE/sony/avContent -d '{"id":2,"method":"getCurrentExternalInputsStatus","version":"1.0","params":["1.0"]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[]'```
 
-3. You will get a list of source inputs, search for your "CEC" device like Apple TV. The "port" and "logaddr" (needed for config.json) is in the adress, in the list defined as "uri", so if your "uri" is "extInput:cec?type=player&port=3&logicalAddr=4" then your port is 3 and logaddr is 4, the "label" (also needed for config.json) is in the list defined as "title"
+3. You will get a list of source inputs, search for your "CEC" device like Apple TV. The "port" and "logaddr" (needed for config.json) is in the adress, in the list defined as **"uri"**, so if your "uri" is **"extInput:cec?type=player&port=3&logicalAddr=4"** then your **port is 3** and **logaddr is 4**, the "label" (also needed for config.json) is in the list defined as "title"
 
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/edit/master/config-example.json) for more details.
 
@@ -91,8 +107,8 @@ If you put only required lines into your config.json, you will only get the HDMI
 | psk | Yes | Your Pre Shared Key |
 | homeapp | Yes | Cause it is not possible to "shutting down" or "deactivate" a HDMI Input or CEC, the homeapp will be activated instead - App installed on the Sony TV |
 
-### OPTIONAL (not required)
-If you put all optional lines, you will get CEC possiblity, Apps etc
+### OPTIONAL (TV)
+With these settings you will get a power switch and a polling functionality for your devices, inputs and tv
 
 | Attributes | Required | Usage |
 |------------|----------|-------|
@@ -101,7 +117,9 @@ If you put all optional lines, you will get CEC possiblity, Apps etc
 | polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
 
-### OPTIONAL for CEC (not required)
+### OPTIONAL (CEC)
+With these settings, you will get cec functionality for your created HDMI switches.
+
 | Attributes | Required | Usage |
 |------------|----------|-------|
 | cecs | No | By putting "cec" into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
@@ -109,7 +127,9 @@ If you put all optional lines, you will get CEC possiblity, Apps etc
 | port | Yes (only if created a cec) | HDMI port of the CEC device |
 | logaddr | Yes (only if created a cec) | Logical Adress of the CEC device |
 
-### OPTIONAL for APPS (not required)
+### OPTIONAL (APPS)
+With these settings, you will get Apps installed on the TV to HomeKit
+
 | Attributes | Required | Usage |
 |------------|----------|-------|
 | apps | No | By putting "apps" into your config.json, this plugin will expose them to HomeKit |
@@ -121,9 +141,9 @@ If you put all optional lines, you will get CEC possiblity, Apps etc
 - ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
 
 - TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
-- TODO: function to volume up/down 
-- ~~TODO: function to switch between apps~~
-- TODO: function to switch between channels
+- TODO: Creating Switches for volume up/down
+- ~~TODO: Creating switches for Apps installed on the TV~~
+- TODO: Creating a Service to switch netween Channels
 
 
 ## Contributing
