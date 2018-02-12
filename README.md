@@ -1,10 +1,10 @@
 # Homebridge Platform Plugin for Sony Bravia Android TV
 
-This is a plugin for [Homebridge](https://github.com/nfarina/homebridge) that can expose a Power Switch, Apps installed TV, all HDMI inputs from your TV to Apple HomeKit. It can also detect CEC devices like Apple TV or PlayStation 4 and controll them. So it is possible to turn on your Apple TV or PlayStation etc. with polling to create awesome automations.
+This is a Platform Plugin for [Homebridge](https://github.com/nfarina/homebridge) that expose a Switch to turn on/off the TV, Switches for Apps installed on the TV and Switches for all HDMI inputs from your TV to Apple HomeKit. It can also detect CEC devices like Apple TV or PlayStation 4 and controll them. So it is possible to turn on your Apple TV or PlayStation etc. with polling to create awesome automations.
 
 ## Why do we need this plugin?
 
-With this plugin you can expose a power switch to controll the power of your TV (on/off) , Switches for Apps installed on your TV (names must be defined in the config file to expose them), Switches for the TV Inputs (HDMI) and also for your CEC devices (must be defined in the config file to expose them) that are plugged in like Apple TV or PlayStation etc. So it will be possible to controll these devices (at the moment only powering on and changing input). More functions will come very soon! 
+With this plugin you will get a switch to controll the power of your TV (on/off) , switches for Apps installed on your TV (names must be defined in the config file to expose them), switches for the TV Inputs (HDMI) and also switches for your CEC devices (must be defined in the config file to expose them) that are plugged in like Apple TV or PlayStation etc. So it will be possible to controll these devices (at the moment only powering on and changing input). More functions will come very soon! 
 
 See [Images](https://github.com/SeydX/homebridge-sonybravia-platform/tree/master/images/) for more details.
 
