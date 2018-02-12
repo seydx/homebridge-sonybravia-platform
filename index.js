@@ -1195,10 +1195,6 @@ function HomeAppAccessory(log, config){
     this.interval = config.interval;
     this.uri = config.uri;
     this.homeapp = config.homeapp;
-    
-    this.log(this.homeapp);
-    this.log(this.polling);
-    this.log(this.interval);
 
     this.informationService = new Service.AccessoryInformation()
         .setCharacteristic(Characteristic.Manufacturer, 'Sony')
