@@ -1256,7 +1256,7 @@ function HomeAppAccessory(log, config){
 	  return accessory.PowerStatus.getPower();
 	}
 	
-	/*
+	
   	this.SourceStatus = {
 	  	
 	  	token: null,
@@ -1280,7 +1280,7 @@ function HomeAppAccessory(log, config){
 			});  	
 		}	  	
 	}
-	*/
+	
 	
 	this.reqSource = function(params) {	
 	  accessory.SourceStatus.token = params.token;
