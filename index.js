@@ -290,7 +290,23 @@ SonyBraviaPlatform.prototype = {
 					else next()
 				})
 	
-			}
+			},
+			
+	        // set Home App Switch
+	        function (next){
+                var homeConfig = {
+                    uri: self.uri,
+                    name: self.name,
+               	    psk: self.psk,
+                    ipadress: self.ipadress,
+                    polling: self.polling,
+                    interval: self.interval,
+                    homeapp: self.homeapp
+                }
+                var homeAccessory = new HomeAppAccessory(self.log, homeConfig)
+                accessoriesArray.push(homeAccessory);
+            next();
+	        }
 			
 			], 
 			
@@ -347,9 +363,16 @@ function SonySourceAccessory(log, config){
 	//SIMPLE POLLING
 	
 	if(this.polling){
-	    setInterval(function(){
-	    	accessory.SourceSwitch.getCharacteristic(Characteristic.On).getValue();
-		}, accessory.interval)
+		//setInterval(function(){
+		//	accessory.SourceSwitch.getCharacteristic(Characteristic.On).getValue();
+		//}, accessory.interval)
+		
+		(function poll(){
+			setTimeout(function(){
+				accessory.SourceSwitch.getCharacteristic(Characteristic.On).getValue();
+				poll()
+			}, accessory.interval)
+		})();
 	}
 
 	//REQUEST PROMISE LIST
@@ -717,7 +740,6 @@ function AppsAccessory(log, config){
 	setInterval(function(){
     	accessory.AppSwitch.getCharacteristic(Characteristic.On).getValue();
 	}, 1000)
-	
 
 	//REQUEST PROMISE LIST
 	
@@ -974,9 +996,16 @@ function TVSwitchAccessory(log, config){
         .on('set', this.setTVSwitch.bind(this));
  
 	if(this.polling){
-	    setInterval(function(){
-	    	accessory.TVSwitch.getCharacteristic(Characteristic.On).getValue();
-		}, accessory.interval)
+	    //setInterval(function(){
+	    //	accessory.TVSwitch.getCharacteristic(Characteristic.On).getValue();
+		//}, accessory.interval)
+		
+		(function poll(){
+			setTimeout(function(){
+				accessory.TVSwitch.getCharacteristic(Characteristic.On).getValue();
+				poll()
+			}, accessory.interval)
+		})();
 	}
       
     //REQUEST PROMISE LIST
@@ -1146,4 +1175,357 @@ TVSwitchAccessory.prototype.setTVSwitch = function(state, callback){
 	    });
 	}
 	
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      Sony Bravia HOME     **********************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+function HomeAppAccessory(log, config){
+	
+    var accessory = this;
+
+    this.log = log;
+    this.name = "Home App";
+    this.psk = config.psk;
+    this.ipadress = config.ipadress;
+    this.polling = config.polling;
+    this.interval = config.interval;
+    this.uri = config.uri;
+    this.homeapp = config.homeapp;
+    
+    this.log(this.homeapp);
+    this.log(this.polling);
+    this.log(this.interval);
+
+    this.informationService = new Service.AccessoryInformation()
+        .setCharacteristic(Characteristic.Manufacturer, 'Sony')
+        .setCharacteristic(Characteristic.Model, 'Sony Bravia Home App')
+        .setCharacteristic(Characteristic.SerialNumber, 'Bravia Serial Number');
+    
+	this.HomeSwitch = new Service.Switch(this.name);
+
+    this.HomeSwitch.getCharacteristic(Characteristic.On)
+        .on('get', this.getHomeSwitch.bind(this))
+        .on('set', this.setHomeSwitch.bind(this));
+
+	//SIMPLE POLLING
+	
+	if(this.polling){
+		//setInterval(function(){
+			(function poll(){
+				setTimeout(function(){
+					accessory.HomeSwitch.getCharacteristic(Characteristic.On).getValue();
+					poll()
+				}, accessory.interval)
+			})();
+		//}, accessory.interval * 1.5)
+	}
+	
+
+	//REQUEST PROMISE LIST
+	
+  	this.PowerStatus = {
+	  	
+	  	token: null,
+	  	
+	  	getPower: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/system",
+			    "body": {
+				  "method": "getPowerStatus",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqPower = function(params) {
+	  accessory.PowerStatus.token = params.token;
+	  return accessory.PowerStatus.getPower();
+	}
+	
+	/*
+  	this.SourceStatus = {
+	  	
+	  	token: null,
+	  	
+	  	getSourceStatus: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/avContent",
+			    "body": {
+				  "method": "getPlayingContentInfo",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	*/
+	
+	this.reqSource = function(params) {	
+	  accessory.SourceStatus.token = params.token;
+	  return accessory.SourceStatus.getSourceStatus();
+	}
+	
+  	this.PowerON = {
+	  	
+	  	token: null,
+	  	
+	  	setPowerOn: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/system",
+			    "body": {
+				  "method": "setPowerStatus",
+				  "params": [{"status": true}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqPowerON = function(params) {
+	  accessory.PowerON.token = params.token;
+	  return accessory.PowerON.setPowerOn();
+	}
+	
+  	this.HomeAPP = {
+	  	
+	  	token: null,
+	  	
+	  	setHomeAPP: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/appControl",
+			    "body": {
+				  "method": "setActiveApp",
+				  "params": [{"uri": accessory.homeapp}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqHomeAPP = function(params) {
+	  accessory.HomeAPP.token = params.token;
+	  return accessory.HomeAPP.setHomeAPP();
+	}
+	
+  	this.TermApp = {
+	  	
+	  	token: null,
+	  	
+	  	delApp: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/appControl",
+			    "body": {
+				  "method": "terminateApps",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqDelApp = function(params) {
+	  accessory.TermApp.token = params.token;
+	  return accessory.TermApp.delApp();
+	}
+ 
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      GET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+HomeAppAccessory.prototype.getServices = function(){
+   return [this.informationService, this.HomeSwitch];
+}
+
+HomeAppAccessory.prototype._getCurrentState = function(callback){
+	
+	var self = this;
+	
+    self.reqSource({"token": process.argv[2]})
+	.then(response => {
+		
+		var state = JSON.stringify(response);
+        callback(null, state);
+		
+	})
+    .catch(err => {
+    	self.log("Could not retrieve status from " + self.name + "; error: " + err);
+		callback(err)
+    });	
+	
+}
+
+HomeAppAccessory.prototype.getHomeSwitch = function(callback){
+	
+    var self = this;
+	
+    self._getCurrentState(function(err, state) {
+	        
+        if (err) callback (err)
+        else {
+	        
+	        self.reqPower({"token": process.argv[2]})
+			.then(response => {
+				
+				var currentPower = response.result[0].status;
+			  	
+				if(currentPower == "active"){
+					if(state.match("Illegal State")){
+						callback(null, true)
+					} else {
+						callback(null, false)
+					}
+					
+				}else if(currentPower == "standby"){
+					callback(null, false)
+				} else {
+					self.log("Could not determine TV Status!")
+					callback(null, false)
+				}	
+				
+				
+			})
+		    .catch(err => {
+				self.log("Could not retrieve TV Status, error: " + err);
+				callback(err)
+		    });	 
+				      	
+        }
+    })
+	
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      SET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+HomeAppAccessory.prototype.setHomeSwitch = function(state, callback){
+	
+	var self = this;
+	
+		if(state){
+			
+	        self.reqPower({"token": process.argv[2]})
+			.then(response => {
+				
+				var currentPower = response.result[0].status;	
+				
+				if (currentPower == "active"){
+					
+					//TV ON - ACTIVATE APP
+					self.reqHomeAPP({"token": process.argv[2]})
+					.then(response => {
+						
+			            self.log("Turn ON: " + self.name);
+			            callback(null, true)
+			            
+					})
+				    .catch(err => {
+		                self.log("Cant set " + self.name + " On: " + err);
+		                callback(err)
+				    });
+					    
+				} else {
+					
+					// TV IS OFF - TURN ON
+					self.reqPowerON({"token": process.argv[2]})
+					.then(response => {
+						
+			            self.log("Turning on the TV");
+			            
+					})
+				    .catch(err => {
+		                self.log("Cant set TV On: " + err);
+		                callback(err)
+				    });
+				  	
+					//TV ON - ACTIVATE APP
+					self.reqHomeAPP({"token": process.argv[2]})
+					.then(response => {
+						
+			            self.log("Turn ON: " + self.name);
+			            callback(null, true)
+			            
+					})
+				    .catch(err => {
+		                self.log("Cant set " + self.name + " On: " + err);
+		                callback(err)
+				    });
+					
+				}
+			})	
+		    .catch(err => {
+                self.log("Cant get TV status: " + err);
+                callback(err)
+		    });	
+		    
+		} else {
+			
+			//TURN OFF
+			self.reqDelApp({"token": process.argv[2]})
+			.then(response => {
+				
+	            self.log("Turn OFF: " + self.name);
+	            
+	            callback(null, false)
+	            
+			})
+		    .catch(err => {
+                self.log("Cant turn off " + self.name + " On: " + err);
+                callback(err)
+		    });
+		    
+		}
+  	
 }
