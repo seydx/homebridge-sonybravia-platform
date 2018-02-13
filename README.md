@@ -1,10 +1,10 @@
 # Homebridge Platform Plugin for Sony Bravia Android TV
 
-This is a Platform Plugin for [Homebridge](https://github.com/nfarina/homebridge) that expose a Switch to turn on/off the TV, Switches for Apps installed on the TV and Switches for all HDMI inputs from your TV to Apple HomeKit. It can also detect CEC devices like Apple TV or PlayStation 4 and controll them. So it is possible to turn on your Apple TV or PlayStation etc. with polling to create awesome automations.
+This is a Platform Plugin for [Homebridge](https://github.com/nfarina/homebridge) that expose a Switch to turn on/off the TV, Service for Apps installed on the TV and Switches for all HDMI inputs from your TV to Apple HomeKit. It can also detect CEC devices like Apple TV or PlayStation 4 and controll them. So it is possible to turn on your Apple TV or PlayStation etc. with polling to create awesome automations.
 
 ## Why do we need this plugin?
 
-With this plugin you will get a switch to controll the power of your TV (on/off) , switches for Apps installed on your TV (names must be defined in the config file to expose them), switches for the TV Inputs (HDMI) and also switches for your CEC devices (must be defined in the config file to expose them) that are plugged in like Apple TV or PlayStation etc. So it will be possible to controll these devices (at the moment only powering on and changing input). More functions will come very soon! 
+With this plugin you will get a switch to controll the power of your TV (on/off) , a Service to switch between App installed on the TV, switches for the TV Inputs (HDMI) and also switches for your CEC devices (must be defined in the config file to expose them) that are plugged in like Apple TV or PlayStation etc. So it will be possible to controll these devices (at the moment only powering on and changing input). More functions will come very soon! 
 
 See [Images](https://github.com/SeydX/homebridge-sonybravia-platform/tree/master/images/) for more details.
 
@@ -53,18 +53,6 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
     "label":"PlayStation 4",
     "logaddr":4,"port":3
    }
-  ],
-  "apps":
-  [
-   {
-    "appName":"YouTube"
-   },
-   {
-    "appName":"Kodi"
-   },
-   {
-    "appName":"Smart IPTV"
-   },
   ]
  }
 ]
@@ -73,7 +61,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 
 ### Home APP
 
-Home App is a on the TV installed app that must be defined in the config.json file. Due to the reason that it makes no sense and also not possible to **deactivate** a HDMI input this App will start instead. So if you switch off an HDMI, the input will change from HDMI to the Home App (_in my case it is a IPTV app_)
+Home App is an on the TV installed app that must be defined in the config.json file. Due to the reason that it makes no sense and also not possible to **deactivate** a HDMI input this App will start instead. So if you switch off an HDMI, the input will change from HDMI to the Home App (_in my case it is a IPTV app_)
 
 With the following command for terminal you will get list of apps that are installed on your TV:
 
@@ -94,6 +82,9 @@ If you dont want only HDMI inputs without special functional, you can also put y
 
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/edit/master/config-example.json) for more details.
 
+## APPS
+
+This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possibpe to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
 ## Options
 Following are tables to see which keys/values are required and which are optional for the config.json
@@ -127,13 +118,13 @@ With these settings, you will get cec functionality for your created HDMI switch
 | port | Yes (only if created a cec) | HDMI port of the CEC device |
 | logaddr | Yes (only if created a cec) | Logical Adress of the CEC device |
 
-### OPTIONAL (APPS)
-With these settings, you will get Apps installed on the TV to HomeKit
 
-| Attributes | Required | Usage |
-|------------|----------|-------|
-| apps | No | By putting "apps" into your config.json, this plugin will expose them to HomeKit |
-| appName | Yes (only if created a app) | Is the name of your App (i.e. YouTube)|
+## Supported clients
+
+This platform and the switches it creates have been verified to work with the following apps on iOS 11:
+
+* Home (no App controlling)
+* Elgato Eve 
 
 
 ## Known issues | TODO
@@ -141,9 +132,9 @@ With these settings, you will get Apps installed on the TV to HomeKit
 - ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
 
 - TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
-- TODO: Creating Switches for volume up/down
-- ~~TODO: Creating switches for Apps installed on the TV~~
-- TODO: Creating a Service to switch netween Channels
+- TODO: Switch/Bulb for volume up/down
+- ~~TODO: Service to switch between apps~~
+- TODO: Service to switch netween Channels
 
 
 ## Contributing
