@@ -1,10 +1,11 @@
 var rp = require("request-promise"),
     async = require("async");
+    
+var HK_TYPES = require("./src/HomeKitTypes.js");
 
 var Accessory, Service, Characteristic;
 
-module.exports = function(homebridge) { 
-    console.log("homebridge API version: " + homebridge.version);
+module.exports = function(homebridge) {
 
     Accessory = homebridge.platformAccessory;
     Service = homebridge.hap.Service;
@@ -16,8 +17,8 @@ module.exports = function(homebridge) {
 function SonyBraviaPlatform(log, config, api){
     var platform = this; 
 	
-	//BASE
-	this.config = config;
+    //BASE
+    this.config = config;
     this.log = log;
     this.name = config["name"];
     this.psk = config["psk"];
@@ -40,6 +41,9 @@ function SonyBraviaPlatform(log, config, api){
     //APS
     this.appsEnabled = config["appsEnabled"] === true;
     this.apps = config["apps"] || [""];
+    this.maxApps = "";
+    
+    HK_TYPES.registerWith(api)
 }
 
 SonyBraviaPlatform.prototype = {
@@ -48,7 +52,7 @@ SonyBraviaPlatform.prototype = {
 	    
 	    var self = this;
 	    var accessoriesArray = []
-	    
+
 	  	var hdmiSources = {
 		  	
 		  	token: null,
@@ -107,6 +111,7 @@ SonyBraviaPlatform.prototype = {
 		  return appList.getApps();
 		}
 
+
 	    //######################################## START ####################################################
 	    
 	    async.waterfall([
@@ -128,6 +133,32 @@ SonyBraviaPlatform.prototype = {
 	            }
 	            next();
 	        },
+	        
+	  		function(next){
+		  		
+					reqApps({"token": process.argv[2]})
+					.then(response => {
+						
+						self.maxApps = response.result[0].length;
+						
+		                var appListConfig = {
+		               	    psk: self.psk,
+		                    ipadress: self.ipadress,
+		                    polling: self.polling,
+		                    interval: self.interval,
+		                    maxApps: self.maxApps
+		                }
+		                
+		                var appListAccessory = new AppAccessory(self.log, appListConfig)
+		                accessoriesArray.push(appListAccessory);
+	
+						next();
+					})
+				    .catch(err => {
+						self.log("Could not retrieve Apps, error:" + err);
+				    });
+				    
+			},
 	        
 	  		function(next){
 		  		
@@ -179,6 +210,7 @@ SonyBraviaPlatform.prototype = {
 				}		  	
 				fetchApps(next)
 			},
+			
 	        // Create APPS Accessories  
 	        function(appsArray, next){
 		          
@@ -363,10 +395,6 @@ function SonySourceAccessory(log, config){
 	//SIMPLE POLLING
 	
 	if(this.polling){
-		//setInterval(function(){
-		//	accessory.SourceSwitch.getCharacteristic(Characteristic.On).getValue();
-		//}, accessory.interval)
-		
 		(function poll(){
 			setTimeout(function(){
 				accessory.SourceSwitch.getCharacteristic(Characteristic.On).getValue();
@@ -709,263 +737,6 @@ SonySourceAccessory.prototype.setSourceSwitch = function(state, callback){
 
 /********************************************************************************************************************************************************/
 /********************************************************************************************************************************************************/
-/*******************************************************************      Sony Bravia APPS     **********************************************************/
-/********************************************************************************************************************************************************/
-/********************************************************************************************************************************************************/
-
-function AppsAccessory(log, config){
-	
-    var accessory = this;
-
-    this.log = log;
-    this.name = config.name;
-    this.psk = config.psk;
-    this.ipadress = config.ipadress;
-    this.uri = config.uri;
-
-    this.informationService = new Service.AccessoryInformation()
-        .setCharacteristic(Characteristic.Manufacturer, 'Sony')
-        .setCharacteristic(Characteristic.Model, 'Sony Bravia App')
-        .setCharacteristic(Characteristic.SerialNumber, 'Bravia Serial Number');
-    
-	this.AppSwitch = new Service.Switch(this.name);
-
-    this.AppSwitch.getCharacteristic(Characteristic.On)
-        .on('get', this.getAppSwitch.bind(this))
-        .on('set', this.setAppSwitch.bind(this));
-
-	//SIMPLE POLLING
-	
-	
-	setInterval(function(){
-    	accessory.AppSwitch.getCharacteristic(Characteristic.On).getValue();
-	}, 1000)
-
-	//REQUEST PROMISE LIST
-	
-  	this.PowerStatus = {
-	  	
-	  	token: null,
-	  	
-	  	getPower: function() {
-		  	return rp({
-			  	
-			    "method": "POST",
-			    "uri": "http://" + accessory.ipadress + "/sony/system",
-			    "body": {
-				  "method": "getPowerStatus",
-				  "params": ["1.0"],
-				  "id": 1,
-				  "version": "1.0"
-			    },
-			    "headers": {
-				    "X-Auth-PSK": accessory.psk
-			    },
-			    "json":true
-			  	
-			});  	
-		}	  	
-	}
-	
-	this.reqPower = function(params) {
-	  accessory.PowerStatus.token = params.token;
-	  return accessory.PowerStatus.getPower();
-	}
-	
-  	this.PowerON = {
-	  	
-	  	token: null,
-	  	
-	  	setPowerOn: function() {
-		  	return rp({
-			  	
-			    "method": "POST",
-			    "uri": "http://" + accessory.ipadress + "/sony/system",
-			    "body": {
-				  "method": "setPowerStatus",
-				  "params": [{"status": true}],
-				  "id": 1,
-				  "version": "1.0"
-			    },
-			    "headers": {
-				    "X-Auth-PSK": accessory.psk
-			    },
-			    "json":true
-			  	
-			});  	
-		}	  	
-	}
-	
-	this.reqPowerON = function(params) {
-	  accessory.PowerON.token = params.token;
-	  return accessory.PowerON.setPowerOn();
-	}
-	
-  	this.HomeAPP = {
-	  	
-	  	token: null,
-	  	
-	  	setHomeAPP: function() {
-		  	return rp({
-			  	
-			    "method": "POST",
-			    "uri": "http://" + accessory.ipadress + "/sony/appControl",
-			    "body": {
-				  "method": "setActiveApp",
-				  "params": [{"uri": accessory.uri}],
-				  "id": 1,
-				  "version": "1.0"
-			    },
-			    "headers": {
-				    "X-Auth-PSK": accessory.psk
-			    },
-			    "json":true
-			  	
-			});  	
-		}	  	
-	}
-	
-	this.reqHomeAPP = function(params) {
-	  accessory.HomeAPP.token = params.token;
-	  return accessory.HomeAPP.setHomeAPP();
-	}
-	
-  	this.TermApp = {
-	  	
-	  	token: null,
-	  	
-	  	delApp: function() {
-		  	return rp({
-			  	
-			    "method": "POST",
-			    "uri": "http://" + accessory.ipadress + "/sony/appControl",
-			    "body": {
-				  "method": "terminateApps",
-				  "params": ["1.0"],
-				  "id": 1,
-				  "version": "1.0"
-			    },
-			    "headers": {
-				    "X-Auth-PSK": accessory.psk
-			    },
-			    "json":true
-			  	
-			});  	
-		}	  	
-	}
-	
-	this.reqDelApp = function(params) {
-	  accessory.TermApp.token = params.token;
-	  return accessory.TermApp.delApp();
-	}
- 
-}
-
-/********************************************************************************************************************************************************/
-/********************************************************************************************************************************************************/
-/*******************************************************************      GET      **********************************************************************/
-/********************************************************************************************************************************************************/
-/********************************************************************************************************************************************************/
-
-AppsAccessory.prototype.getServices = function(){
-   return [this.informationService, this.AppSwitch];
-}
-
-AppsAccessory.prototype.getAppSwitch = function(callback){
-	
-    var self = this;
-    
-	callback(null, false)
-	
-}
-
-/********************************************************************************************************************************************************/
-/********************************************************************************************************************************************************/
-/*******************************************************************      SET      **********************************************************************/
-/********************************************************************************************************************************************************/
-/********************************************************************************************************************************************************/
-
-AppsAccessory.prototype.setAppSwitch = function(state, callback){
-	
-	var self = this;
-	
-		if(state){
-			
-	        self.reqPower({"token": process.argv[2]})
-			.then(response => {
-				
-				var currentPower = response.result[0].status;	
-				
-				if (currentPower == "active"){
-					
-					//TV ON - ACTIVATE APP
-					self.reqHomeAPP({"token": process.argv[2]})
-					.then(response => {
-						
-			            self.log("Turn ON: " + self.name);
-			            callback(null, true)
-			            
-					})
-				    .catch(err => {
-		                self.log("Cant set " + self.name + " On (status code %s): %s", response.statusCode, err);
-		                callback(err)
-				    });
-					    
-				} else {
-					
-					// TV IS OFF - TURN ON
-					self.reqPowerON({"token": process.argv[2]})
-					.then(response => {
-						
-			            self.log("Turning on the TV");
-			            
-					})
-				    .catch(err => {
-		                self.log("Cant set TV On (status code %s): %s", response.statusCode, err);
-		                callback(err)
-				    });
-				  	
-					//TV ON - ACTIVATE APP
-					self.reqHomeAPP({"token": process.argv[2]})
-					.then(response => {
-						
-			            self.log("Turn ON: " + self.name);
-			            callback(null, true)
-			            
-					})
-				    .catch(err => {
-		                self.log("Cant set " + self.name + " On (status code %s): %s", response.statusCode, err);
-		                callback(err)
-				    });
-					
-				}
-			})	
-		    .catch(err => {
-                self.log("Cant get TV status (status code %s): %s", response.statusCode, err);
-                callback(err)
-		    });	
-		    
-		} else {
-			
-			//TURN OFF
-			self.reqDelApp({"token": process.argv[2]})
-			.then(response => {
-				
-	            self.log("Turn OFF: " + self.name);
-	            callback(null, false)
-	            
-			})
-		    .catch(err => {
-                self.log("Cant turn off " + self.name + " On (status code %s): %s", response.statusCode, err);
-                callback(err)
-		    });
-		    
-		}
-  	
-}
-
-/********************************************************************************************************************************************************/
-/********************************************************************************************************************************************************/
 /**************************************************************      TV Switch      ******************************************************************/
 /********************************************************************************************************************************************************/
 /********************************************************************************************************************************************************/
@@ -996,10 +767,6 @@ function TVSwitchAccessory(log, config){
         .on('set', this.setTVSwitch.bind(this));
  
 	if(this.polling){
-	    //setInterval(function(){
-	    //	accessory.TVSwitch.getCharacteristic(Characteristic.On).getValue();
-		//}, accessory.interval)
-		
 		(function poll(){
 			setTimeout(function(){
 				accessory.TVSwitch.getCharacteristic(Characteristic.On).getValue();
@@ -1007,7 +774,7 @@ function TVSwitchAccessory(log, config){
 			}, accessory.interval)
 		})();
 	}
-      
+
     //REQUEST PROMISE LIST
     
   	this.PowerStatus = {
@@ -1096,6 +863,7 @@ function TVSwitchAccessory(log, config){
 	  accessory.PowerOFF.token = params.token;
 	  return accessory.PowerOFF.setPowerOff();
 	}
+	
 }
 
 /********************************************************************************************************************************************************/
@@ -1118,14 +886,11 @@ TVSwitchAccessory.prototype.getTVSwitch = function(callback){
 		var currentPower = response.result[0].status;
 	  	
 		if(currentPower == "active"){
-			//self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(Characteristic.On.TRUE);
 			callback(null, true)
 		}else if(currentPower == "standby"){
-			//self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(Characteristic.On.FALSE);
 			callback(null, false)
 		} else {
 			self.log("Could not determine TV Status!")
-			//self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(Characteristic.On.FALSE);
 			callback(null, false)
 		}	
 		
@@ -1219,7 +984,6 @@ function HomeAppAccessory(log, config){
 			})();
 		//}, accessory.interval * 1.5)
 	}
-	
 
 	//REQUEST PROMISE LIST
 	
@@ -1523,5 +1287,226 @@ HomeAppAccessory.prototype.setHomeSwitch = function(state, callback){
 		    });
 		    
 		}
-  	
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      Sony Bravia Apps     **********************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+function AppAccessory(log, config) {
+	
+	var accessory = this;
+	
+	this.log = log;
+	this.name = "Apps";
+	this.psk = config.psk;
+	this.ipadress = config.ipadress;
+	this.polling = config.polling;
+	this.interval = config.interval;
+	this.maxApps = config.maxApps;
+
+	this.informationService = new Service.AccessoryInformation();
+	this.informationService.setCharacteristic(Characteristic.Manufacturer, "Sony Bravia Apps");
+	this.informationService.setCharacteristic(Characteristic.Model, "Sony Bravia Model");
+
+	this.AppService = new Service.AppService(this.name);
+
+	this.AppService.addCharacteristic(Characteristic.TargetApp);
+	this.AppService.getCharacteristic(Characteristic.TargetApp)
+			.setProps({
+				maxValue: accessory.maxApps,
+				minValue: 0,
+				minStep: 1
+			})
+            .on("get", this.getTargetApp.bind(this))
+            .on("set", this.setTargetApp.bind(this));
+            
+	(function poll(){
+		setTimeout(function(){
+			accessory.AppService.getCharacteristic(Characteristic.TargetApp).getValue();
+			poll()
+		}, 15000)
+	})();    
+
+	this.AppService.addCharacteristic(Characteristic.TargetName);
+	this.AppService.getCharacteristic(Characteristic.TargetName)
+            .on("get", this.getTargetAppName.bind(this));
+            
+	(function poll(){
+		setTimeout(function(){
+			accessory.AppService.getCharacteristic(Characteristic.TargetName).getValue();
+			poll()
+		}, accessory.interval)
+	})();
+	
+  	this.appList = {
+	  	
+	  	token: null,
+	  	
+	  	getApps: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/appControl",
+			    "body": {
+				  "method": "getApplicationList",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqApps = function(params) {
+	  accessory.appList.token = params.token;
+	  return accessory.appList.getApps();
+	}
+	
+	accessory.reqApps({"token": process.argv[2]})
+	.then(response => {
+		
+		var name = response.result[0];
+		var apps = response.result[0].length;
+			
+			
+		console.log("Following, a list of all installed Apps on the TV to create awesome scenes! Have fun.");
+	    for (var i = 1; i < apps; i++){
+	        console.log("App: " + name[i].title + " - Number: " + i);
+	    }		
+
+	})
+	.catch(err => {
+        console.log(err)
+    });
+
+}
+
+AppAccessory.prototype.getServices = function(){
+   return [this.informationService, this.AppService];
+}
+
+AppAccessory.prototype.getTargetApp = function(callback){
+	
+var self = this;
+var tarValue = self.AppService.getCharacteristic(Characteristic.TargetApp).value;
+
+
+callback(false, tarValue)
+	
+}
+
+AppAccessory.prototype.getTargetAppName = function(callback){
+
+	var self = this;
+	var tarValue = self.AppService.getCharacteristic(Characteristic.TargetApp).value;
+	
+	self.appName = "";
+	
+	self.reqApps({"token": process.argv[2]})
+	.then(response => {
+	
+		var name = response.result[0];
+		var apps = response.result[0].length;
+		
+		for (var i = 0; i <= apps; i++){
+		 
+			switch (i)                        
+			{
+			    case tarValue:                        
+		        	self.appName = name[i].title
+					break;   
+			}
+			 
+		}		
+		callback(false, self.appName)
+		
+	})
+	.catch(err => {
+		console.log(err)
+		callback(false, "ERROR")
+	});
+
+}
+
+AppAccessory.prototype.setTargetApp = function(value, callback){
+
+	var self = this;
+	
+	self.appName = "";
+	self.appUri = "";
+
+	self.reqApps({"token": process.argv[2]})
+	.then(response => {
+	
+		var name = response.result[0];
+		var apps = response.result[0].length;
+
+		for (var i = 0; i <= apps; i++){
+	 
+			switch (i)                        
+			{
+			    case value:
+			    	self.appName = name[i].title
+		        	self.appUri = name[i].uri
+					break;
+			}
+		
+		}
+		
+	  	HomeAPP = {
+		  	
+		  	token: null,
+		  	
+		  	setHomeAPP: function() {
+			  	return rp({
+				  	
+				    "method": "POST",
+				    "uri": "http://" + self.ipadress + "/sony/appControl",
+				    "body": {
+					  "method": "setActiveApp",
+					  "params": [{"uri": self.appUri}],
+					  "id": 1,
+					  "version": "1.0"
+				    },
+				    "headers": {
+					    "X-Auth-PSK": self.psk
+				    },
+				    "json":true
+				  	
+				});  	
+			}	  	
+		}
+		
+		reqHomeAPP = function(params) {
+		  HomeAPP.token = params.token;
+		  return HomeAPP.setHomeAPP();
+		}	
+		
+		reqHomeAPP({"token": process.argv[2]})
+		.then(response => {
+		
+		self.log("Activate: " + self.appName);
+                callback()
+					
+		})
+		.catch(err => {
+			console.log(err)
+            callback()
+		});
+		
+		
+	})
+	.catch(err => {
+		console.log(err)
+		callback()
+	});
+
 }
