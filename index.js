@@ -28,9 +28,7 @@ function SonyBraviaPlatform(log, config, api){
     this.interval = (config['interval']*1000) || 2000;
     this.homeapp = config["homeapp"] || "";   
     this.uri = "";
-    
-    //TV 
-    this.tvSwitch = config["tvSwitch"] === true;
+    this.maxVolume = config["maxVolume"] || 30;
     
     //CECs
     this.cecname = "";
@@ -118,7 +116,6 @@ SonyBraviaPlatform.prototype = {
     
 	        // set TV Switch
 	        function (next){
-	            if (self.tvSwitch){
 	                var tvConfig = {
 	                    uri: self.uri,
 	                    name: self.name,
@@ -130,10 +127,10 @@ SonyBraviaPlatform.prototype = {
 	                }
 	                var tvAccessory = new TVSwitchAccessory(self.log, tvConfig)
 	                accessoriesArray.push(tvAccessory);
-	            }
 	            next();
 	        },
 	        
+	        // set APP Service
 	  		function(next){
 		  		
 					reqApps({"token": process.argv[2]})
@@ -152,90 +149,15 @@ SonyBraviaPlatform.prototype = {
 		                var appListAccessory = new AppAccessory(self.log, appListConfig)
 		                accessoriesArray.push(appListAccessory);
 	
-						next();
 					})
 				    .catch(err => {
 						self.log("Could not retrieve Apps, error:" + err);
 				    });
 				    
-			},
-	        
-	  		function(next){
-		  		
-		  		function fetchApps(next){
-					
-					reqApps({"token": process.argv[2]})
-					.then(response => {
-						
-						var result = response.result[0];
-						
-						var appsArray = []
-						var objArray = []
-						
-						
-						for(var i = 0; i < result.length; i++){
-							objArray.push(result[i]);
-						}
-						
-			          	objArray.forEach(function(element, index1, array1) {
-				          	
-							if(self.config.apps){
-						        self.config.apps.forEach(function(appswitch, index2, array2){
-					                   
-					                if(element.title.match(appswitch.appName)){
-						                
-			                            var toConfig = {
-			                                psk: self.psk,
-			                                ipadress: self.ipadress,
-			                                name: element.title,
-			                                uri: element.uri
-			                            }
-			                            
-			                            appsArray.push(toConfig);
-					                }
-					            })
-					        }
-							
-						})
-						next(null, appsArray)
-					})
-				    .catch(err => {
-						self.log("Could not retrieve Apps, error:" + err);
-						self.log("Fetching Apps failed - Trying again...");
-						setTimeout(function(){
-							fetchApps(next)
-                     	}, 10000)
-				    });	  	
-				
-				}		  	
-				fetchApps(next)
-			},
-			
-	        // Create APPS Accessories  
-	        function(appsArray, next){
-		          
-		        async.forEachOf(appsArray, function (zone, key, step) {
-			          
-			        function pushMyAccessories(step){
-					    
-					    if(self.appsEnabled){
-						    self.log("Found: " + zone.name);
-						    
-							var MyAppsAccessory = new AppsAccessory(self.log, zone)
-							accessoriesArray.push(MyAppsAccessory);
-							step()
-					    }  else {
-						    step()
-					    }
-				
-					} pushMyAccessories(step)
-				},	function(err){
-					if (err) next(err)
-					else next()
-				})
-	
+				next();
 			},
 		    
+		    //Push HDMI/CEC
 	  		function(next){
 		  		
 		  		function fetchSources(next){
@@ -262,7 +184,6 @@ SonyBraviaPlatform.prototype = {
 	                                    psk: self.psk,
 	                                    ipadress: self.ipadress,
 	                                    polling: self.polling,
-	                                    tvSwitch: self.tvSwitch,
 	                                    interval: self.interval,
 	                                    homeapp: self.homeapp
 	                                }
@@ -338,6 +259,22 @@ SonyBraviaPlatform.prototype = {
                 var homeAccessory = new HomeAppAccessory(self.log, homeConfig)
                 accessoriesArray.push(homeAccessory);
             next();
+	        },
+	        
+	        // set Volume Control
+	        function (next){
+	                var volConfig = {
+	                    uri: self.uri,
+	                    name: self.name,
+	               	    psk: self.psk,
+	                    ipadress: self.ipadress,
+	                    polling: self.polling,
+	                    interval: self.interval,
+	                    maxVolume: self.maxVolume
+	                }
+	                var volAccessory = new VolumeAccessory(self.log, volConfig)
+	                accessoriesArray.push(volAccessory);
+				next();
 	        }
 			
 			], 
@@ -367,7 +304,6 @@ function SonySourceAccessory(log, config){
     this.psk = config.psk;
     this.ipadress = config.ipadress;
     this.polling = config.polling;
-    this.tvSwitch = self.tvSwitch;
     this.interval = config.interval;
     this.uri = config.uri;
     this.homeapp = config.homeapp;
@@ -751,7 +687,6 @@ function TVSwitchAccessory(log, config){
     this.interval = config.interval;
     this.uri = config.uri;
     this.homeapp = config.homeapp;
-    this.tvSwitch = config.tvSwitch;
 
     this.informationService = new Service.AccessoryInformation()
         .setCharacteristic(Characteristic.Manufacturer, 'Sony')
@@ -1385,6 +1320,12 @@ function AppAccessory(log, config) {
 
 }
 
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      GET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
 AppAccessory.prototype.getServices = function(){
    return [this.informationService, this.AppService];
 }
@@ -1433,6 +1374,12 @@ AppAccessory.prototype.getTargetAppName = function(callback){
 	});
 
 }
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      SET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
 
 AppAccessory.prototype.setTargetApp = function(value, callback){
 
@@ -1491,8 +1438,8 @@ AppAccessory.prototype.setTargetApp = function(value, callback){
 		reqHomeAPP({"token": process.argv[2]})
 		.then(response => {
 		
-		self.log("Activate: " + self.appName);
-                callback()
+			self.log("Activate: " + self.appName);
+            callback()
 					
 		})
 		.catch(err => {
@@ -1507,4 +1454,436 @@ AppAccessory.prototype.setTargetApp = function(value, callback){
 		callback()
 	});
 
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      Sony Bravia Volume     ********************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+function VolumeAccessory(log, config) {
+	
+	var accessory = this;
+	
+	this.log = log;
+	this.name = "Volume";
+	this.psk = config.psk;
+	this.ipadress = config.ipadress;
+	this.polling = config.polling;
+	this.interval = config.interval;
+	this.maxVolume = config.maxVolume;
+
+	this.informationService = new Service.AccessoryInformation();
+	this.informationService.setCharacteristic(Characteristic.Manufacturer, "Sony Bravia Volume Control");
+	this.informationService.setCharacteristic(Characteristic.Model, "Sony Bravia Model");
+
+	this.VolumeBulb = new Service.Lightbulb(this.name);
+	
+	this.VolumeBulb.getCharacteristic(Characteristic.On)
+		.on('get', this.getMuteState.bind(this))
+        .on('set', this.setMuteState.bind(this));
+        
+	if(this.polling){
+		(function poll(){
+			setTimeout(function(){
+				accessory.VolumeBulb.getCharacteristic(Characteristic.On).getValue();
+				poll()
+			}, accessory.interval)
+		})();
+	}  
+        
+    this.VolumeBulb.addCharacteristic(new Characteristic.Brightness())
+	    .setProps({
+		    maxValue: 30,
+		    minValue: 0,
+		    minStep: 1
+	  	})
+        .on('get', this.getVolume.bind(this))
+        .on('set', this.setVolume.bind(this));
+        
+    //SIMPLE POLLING
+    
+	if(this.polling){
+		(function poll(){
+			setTimeout(function(){
+				accessory.VolumeBulb.getCharacteristic(Characteristic.Brightness).getValue();
+				poll()
+			}, accessory.interval)
+		})();
+	}
+        
+    //REQUEST PROMISE LIST 
+        
+  	this.PowerStatus = {
+	  	
+	  	token: null,
+	  	
+	  	getPower: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/system",
+			    "body": {
+				  "method": "getPowerStatus",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqPower = function(params) {
+	  accessory.PowerStatus.token = params.token;
+	  return accessory.PowerStatus.getPower();
+	}
+        
+	this.volume = {
+		
+		token: null,
+		
+		getVolume: function() {
+			
+			return rp({
+					
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/audio",
+			    "body": {
+				  "method": "getVolumeInformation",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			    
+			});
+			
+		}
+		
+	}
+	
+	this.reqVolume = function(params) {
+	  accessory.volume.token = params.token;
+	  return accessory.volume.getVolume();
+	}
+	
+	this.muteOff = {
+		
+		token: null,
+		
+		setMuteOff: function() {
+			
+			return rp({
+					
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/audio",
+			    "body": {
+				  "method": "setAudioMute",
+				  "params": [{"status":true}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			    
+			});
+			
+		}
+		
+	}
+	
+	this.reqMuteOff = function(params) {
+	  accessory.muteOff.token = params.token;
+	  return accessory.muteOff.setMuteOff();
+	}
+	
+	this.muteOn = {
+		
+		token: null,
+		
+		setMuteOn: function() {
+			
+			return rp({
+					
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/audio",
+			    "body": {
+				  "method": "setAudioMute",
+				  "params": [{"status":false}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			    
+			});
+			
+		}
+		
+	}
+	
+	this.reqMuteOn = function(params) {
+	  accessory.muteOn.token = params.token;
+	  return accessory.muteOn.setMuteOn();
+	}
+
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      GET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+VolumeAccessory.prototype.getServices = function(){
+   return [this.informationService, this.VolumeBulb];
+}
+
+VolumeAccessory.prototype.getMuteState = function(callback){
+	
+	var self = this;
+	
+	self.mute = false;
+	
+	self.reqPower({"token": process.argv[2]})
+	.then(response => {
+		
+		var currentPower = response.result[0].status;	
+		
+		if (currentPower == "active"){
+			
+			self.reqVolume({"token": process.argv[2]})
+			.then(response => {
+				
+				var name = response.result[0];
+				
+				for(var i = 0; i < name.length; i++){
+					
+					if(name[i].target.match("speaker")){
+						
+						self.mute = name[i].mute == false;
+						
+					}
+						
+				}
+				
+				callback(false, self.mute)
+			
+			})
+			.catch(err => {
+		        console.log(err)
+		        callback(false, false)
+		    });
+			
+		} else {
+			
+			callback(false, false)
+			
+		}   
+		  
+	})
+    .catch(err => {
+        self.log("Cant get TV State: " + err);
+        callback(false, 0)
+    });
+	
+}
+
+VolumeAccessory.prototype.getVolume = function(callback){
+
+	var self = this;
+	
+	self.currentVolume = false;
+	
+	self.reqPower({"token": process.argv[2]})
+	.then(response => {
+		
+		var currentPower = response.result[0].status;	
+		
+		if (currentPower == "active"){
+			
+			self.reqVolume({"token": process.argv[2]})
+			.then(response => {
+				
+				var name = response.result[0];
+				
+				for(var i = 0; i < name.length; i++){
+					
+					if(name[i].target.match("speaker")){
+						
+						self.currentVolume = name[i].volume;
+						
+					}
+						
+				}
+				
+				callback(false, self.currentVolume)
+			
+			})
+			.catch(err => {
+		        console.log(err)
+		        callback(false, 0)
+		    });
+			
+		} else {
+			
+			callback(false, 0)
+			
+		}   
+		  
+	})
+    .catch(err => {
+        self.log("Cant get TV State: " + err);
+        callback(false, 0)
+    });
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      SET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+VolumeAccessory.prototype.setMuteState = function(state, callback){
+
+	var self = this;
+	
+	if(state){
+		
+		
+		self.reqPower({"token": process.argv[2]})
+		.then(response => {
+			
+			var currentPower = response.result[0].status;	
+			
+			if (currentPower == "active"){
+			
+				self.reqMuteOn({"token": process.argv[2]})
+				.then(response => {
+					self.log("Activate: " + self.name);
+					
+					
+					self.VolumeBulb.setVolume(self.volumeBeforeMute, this.volume)
+					this.volume = self.volumeBeforeMute
+					
+					
+		            callback(false, true)
+		        })
+			    .catch(err => {
+			        self.log("Cant get Mute State: " + err);
+			        callback(false, false)
+			    });  
+			    
+			}else{
+				
+				self.log("Can't set mute state, TV is OFF");
+		        callback(false, false)
+				
+			}
+            
+        })
+	    .catch(err => {
+	        self.log("Cant get TV State: " + err);
+	        callback(false, false)
+	    });  
+	    
+	}else{
+		
+		self.reqMuteOff({"token": process.argv[2]})
+		.then(response => {
+		
+			self.log("Deactivate: " + self.name);
+            callback(false, false)
+					
+		})
+		.catch(err => {
+			self.log("Cant disable Volume: " + err);
+            callback()
+		});
+		
+	}
+	
+}
+
+VolumeAccessory.prototype.setVolume = function(value, callback){
+
+	var self = this;
+	
+    var newValue = value.toString();
+	
+	self.reqPower({"token": process.argv[2]})
+	.then(response => {
+		
+		var currentPower = response.result[0].status;	
+		
+		if (currentPower == "active"){
+			
+			var tarVolume = {
+				
+				token: null,
+				
+				setTarVolume: function() {
+					
+					return rp({
+							
+					    "method": "POST",
+					    "uri": "http://" + self.ipadress + "/sony/audio",
+					    "body": {
+						  "method": "setAudioVolume",
+						  "params": [{"target":"speaker","volume":newValue}],
+						  "id": 1,
+						  "version": "1.0"
+					    },
+					    "headers": {
+						    "X-Auth-PSK": self.psk
+					    },
+					    "json":true
+					    
+					});
+					
+				}
+				
+			}
+			
+			reqTarVolume = function(params) {
+			  tarVolume.token = params.token;
+			  return tarVolume.setTarVolume();
+			}
+			
+			reqTarVolume({"token": process.argv[2]})
+			.then(response => {
+				
+				self.log("Setting Volume to: " + value);
+				callback();
+			
+			})
+			.catch(err => {
+		        console.log("Can't set target volume! " + err)
+		        callback()
+		    });
+			
+		} else {
+			
+			callback()
+			
+		}   
+		  
+	})
+    .catch(err => {
+        self.log("Cant get TV State: " + err);
+        callback()
+    });
 }
