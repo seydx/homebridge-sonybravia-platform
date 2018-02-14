@@ -139,6 +139,7 @@ SonyBraviaPlatform.prototype = {
 						self.maxApps = response.result[0].length;
 						
 		                var appListConfig = {
+                                    name: self.name,
 		               	    psk: self.psk,
 		                    ipadress: self.ipadress,
 		                    polling: self.polling,
@@ -180,7 +181,7 @@ SonyBraviaPlatform.prototype = {
 						  		
 	                                var toConfig = {
 	                                    uri: element.uri,
-	                                    name: element.title,
+	                                    name: element.title + " " + self.name,
 	                                    psk: self.psk,
 	                                    ipadress: self.ipadress,
 	                                    polling: self.polling,
@@ -319,7 +320,7 @@ function SonySourceAccessory(log, config){
     
     if(this.cecname){
 	    this.uri = this.cecuri;
-	    this.name = this.cecname;
+	    this.name = this.name + " " + this.cecname;
     }
     
 	this.SourceSwitch = new Service.Switch(this.name);
@@ -680,7 +681,7 @@ function TVSwitchAccessory(log, config){
     var accessory = this;
 
     this.log = log;
-    this.name = "Sony TV";
+    this.name = config.name + " Power";
     this.psk = config.psk;
     this.ipadress = config.ipadress;
     this.polling = config.polling;
@@ -885,7 +886,7 @@ function HomeAppAccessory(log, config){
     var accessory = this;
 
     this.log = log;
-    this.name = "Home App";
+    this.name = config.name + " Home";
     this.psk = config.psk;
     this.ipadress = config.ipadress;
     this.polling = config.polling;
@@ -1231,7 +1232,7 @@ function AppAccessory(log, config) {
 	var accessory = this;
 	
 	this.log = log;
-	this.name = "Apps";
+	this.name = config.name + " Apps";
 	this.psk = config.psk;
 	this.ipadress = config.ipadress;
 	this.polling = config.polling;
@@ -1258,7 +1259,7 @@ function AppAccessory(log, config) {
 		setTimeout(function(){
 			accessory.AppService.getCharacteristic(Characteristic.TargetApp).getValue();
 			poll()
-		}, 10000)
+		}, 15000)
 	})();    
 
 	this.AppService.addCharacteristic(Characteristic.TargetName);
@@ -1467,7 +1468,7 @@ function VolumeAccessory(log, config) {
 	var accessory = this;
 	
 	this.log = log;
-	this.name = "Volume";
+	this.name = config.name + " Volume";
 	this.psk = config.psk;
 	this.ipadress = config.ipadress;
 	this.polling = config.polling;
