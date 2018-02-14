@@ -5,13 +5,14 @@ var HK_TYPES = require("./src/HomeKitTypes.js");
 
 var Accessory, Service, Characteristic;
 
-module.exports = function(homebridge) {
+module.exports = function(homebridge) { 
 
     Accessory = homebridge.platformAccessory;
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
 
-    homebridge.registerPlatform("homebridge-sonybravia-platform", "SonyBravia", SonyBraviaPlatform);
+    homebridge.registerPlatform("homebridge-sonybravia-platform", "SonyBravia", SonyBraviaPlatform);    
+
 }
 
 function SonyBraviaPlatform(log, config, api){
@@ -43,7 +44,7 @@ function SonyBraviaPlatform(log, config, api){
     this.apps = config["apps"] || [""];
     this.maxApps = "";
     
-    HK_TYPES.registerWith(api)
+    HK_TYPES.registerWith(api);
 }
 
 SonyBraviaPlatform.prototype = {
@@ -52,7 +53,7 @@ SonyBraviaPlatform.prototype = {
 	    
 	    var self = this;
 	    var accessoriesArray = []
-
+	    
 	  	var hdmiSources = {
 		  	
 		  	token: null,
@@ -110,7 +111,6 @@ SonyBraviaPlatform.prototype = {
 		  appList.token = params.token;
 		  return appList.getApps();
 		}
-
 
 	    //######################################## START ####################################################
 	    
@@ -597,8 +597,6 @@ SonySourceAccessory.prototype.getSourceSwitch = function(callback){
 			  	
 			  	var newName = self.name;
 			  	
-			  	//var newName = "";
-			  	
 			  	if(self.cecname){
 				  	newName = "HDMI " + self.cecport;
 				  	formatName = newName.split("/")[0]
@@ -753,7 +751,7 @@ function TVSwitchAccessory(log, config){
     this.interval = config.interval;
     this.uri = config.uri;
     this.homeapp = config.homeapp;
-    this.tvSwitch = self.tvSwitch;
+    this.tvSwitch = config.tvSwitch;
 
     this.informationService = new Service.AccessoryInformation()
         .setCharacteristic(Characteristic.Manufacturer, 'Sony')
@@ -774,7 +772,7 @@ function TVSwitchAccessory(log, config){
 			}, accessory.interval)
 		})();
 	}
-
+      
     //REQUEST PROMISE LIST
     
   	this.PowerStatus = {
@@ -863,7 +861,6 @@ function TVSwitchAccessory(log, config){
 	  accessory.PowerOFF.token = params.token;
 	  return accessory.PowerOFF.setPowerOff();
 	}
-	
 }
 
 /********************************************************************************************************************************************************/
@@ -975,15 +972,14 @@ function HomeAppAccessory(log, config){
 	//SIMPLE POLLING
 	
 	if(this.polling){
-		//setInterval(function(){
-			(function poll(){
-				setTimeout(function(){
-					accessory.HomeSwitch.getCharacteristic(Characteristic.On).getValue();
-					poll()
-				}, accessory.interval)
-			})();
-		//}, accessory.interval * 1.5)
+		(function poll(){
+			setTimeout(function(){
+				accessory.HomeSwitch.getCharacteristic(Characteristic.On).getValue();
+				poll()
+			}, accessory.interval)
+		})();
 	}
+	
 
 	//REQUEST PROMISE LIST
 	
@@ -1327,7 +1323,7 @@ function AppAccessory(log, config) {
 		setTimeout(function(){
 			accessory.AppService.getCharacteristic(Characteristic.TargetApp).getValue();
 			poll()
-		}, 15000)
+		}, 10000)
 	})();    
 
 	this.AppService.addCharacteristic(Characteristic.TargetName);
@@ -1340,7 +1336,7 @@ function AppAccessory(log, config) {
 			poll()
 		}, accessory.interval)
 	})();
-	
+
   	this.appList = {
 	  	
 	  	token: null,
@@ -1378,7 +1374,7 @@ function AppAccessory(log, config) {
 			
 			
 		console.log("Following, a list of all installed Apps on the TV to create awesome scenes! Have fun.");
-	    for (var i = 1; i < apps; i++){
+	    for (var i = 0; i < apps; i++){
 	        console.log("App: " + name[i].title + " - Number: " + i);
 	    }		
 
@@ -1395,12 +1391,14 @@ AppAccessory.prototype.getServices = function(){
 
 AppAccessory.prototype.getTargetApp = function(callback){
 	
-var self = this;
-var tarValue = self.AppService.getCharacteristic(Characteristic.TargetApp).value;
-
-
-callback(false, tarValue)
+	var self = this;
+	var tarValue = self.AppService.getCharacteristic(Characteristic.TargetApp).value;
 	
+	if(tarValue != null || tarValue != undefined || tarValue != ""){
+		callback(false, tarValue)
+	}else {
+		callback(false, 0)
+	}
 }
 
 AppAccessory.prototype.getTargetAppName = function(callback){
