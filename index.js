@@ -28,6 +28,7 @@ function SonyBraviaPlatform(log, config, api){
     this.interval = (config['interval']*1000) || 2000;
     this.homeapp = config["homeapp"] || "";   
     this.uri = "";
+    this.hdminame = "";
     this.maxVolume = config["maxVolume"] || 30;
     
     //CECs
@@ -181,7 +182,8 @@ SonyBraviaPlatform.prototype = {
 						  		
 	                                var toConfig = {
 	                                    uri: element.uri,
-	                                    name: element.title + " " + self.name,
+	                                    hdminame: element.title,
+                                            name: self.name,
 	                                    psk: self.psk,
 	                                    ipadress: self.ipadress,
 	                                    polling: self.polling,
@@ -301,7 +303,8 @@ function SonySourceAccessory(log, config){
     var accessory = this;
 
     this.log = log;
-    this.name = config.name;
+    this.hdminame = config.hdminame
+    this.name = config.name + " " + this.hdminame;
     this.psk = config.psk;
     this.ipadress = config.ipadress;
     this.polling = config.polling;
@@ -320,7 +323,7 @@ function SonySourceAccessory(log, config){
     
     if(this.cecname){
 	    this.uri = this.cecuri;
-	    this.name = this.name + " " + this.cecname;
+	    this.name = config.name + " " + this.cecname;
     }
     
 	this.SourceSwitch = new Service.Switch(this.name);
