@@ -94,7 +94,7 @@ Following are tables to see which keys/values are required and which are optiona
 
 | **Attributes** | **Required** | **Usage** |
 |------------|----------|-------|
-| name | No | Name for the Platform. |
+| name | **Yes** | **Unique Name** for the Platform.   |
 | ipadress | **Yes** | IP adress from your Sony Bravia TV |
 | psk | **Yes** | Your Pre Shared Key |
 | polling | No | Checking states of TV and Sources (Default: true) |
