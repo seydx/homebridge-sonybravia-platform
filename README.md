@@ -88,9 +88,6 @@ If you want to control your CEC devices too, do following steps (it is important
 This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possibpe to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
 ## Options
-Following are tables to see which keys/values are required and which are optional for the config.json
-
-### BASE (required)
 
 | **Attributes** | **Required** | **Usage** |
 |------------|----------|-------|
