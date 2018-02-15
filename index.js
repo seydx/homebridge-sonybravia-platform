@@ -538,11 +538,20 @@ SonySourceAccessory.prototype.getSourceSwitch = function(callback){
 			  	var newName = self.name;
 			  	
 			  	if(self.cecname){
+				  	self.name = self.cecname;
 				  	newName = "HDMI " + self.cecport;
 				  	formatName = newName.split("/")[0]
+			  	} else {
+				  	self.name = self.hdminame;
 			  	}
 			  	
 				if(currentPower == "active"){
+					
+					self.log("STATE: " + state);
+					self.log("NAME: " + self.name);
+					self.log("newName: " + newName);
+					self.log("formatName: " + formatName);
+					
 					if(state.match(self.name)||state.match(formatName)||state.match(newName)){
 						callback(null, true)
 					} else {
