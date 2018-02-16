@@ -43,6 +43,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "polling":true,
   "interval": 2,
   "maxVolume":30,
+  "extraInputs":true,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":
   [
@@ -96,6 +97,7 @@ This plugin creates a Service that detects automatically all Apps from the TV. W
 | psk | **Yes** | Your Pre Shared Key |
 | polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
+| extraInputs | No | Expose extra sources like AV, display mirroring etc. (Default: true) |
 | homeapp | **Yes** | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
 | maxVolume | No | Max adjustable volume (Default: 30) |
 | cecs | No | By putting "cec" key into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
@@ -116,10 +118,10 @@ This platform and the switches it creates have been verified to work with the fo
 
 - ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
 
-- TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
+- ~~TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring~~
 - ~~TODO: Bulb for volume up/down~~
 - ~~TODO: Service to switch between apps~~
-- TODO: Service to switch netween Channels
+- TODO: Service to switch between Channels
 
 
 ## Contributing
