@@ -16,6 +16,7 @@
   "interval": 2,
   "volumeControl":true,
   "maxVolume":30,
+  "extraInputs":true,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":[{"label":"Apple TV","logaddr":8,"port":2},
           {"label":"PlayStation 4","logaddr":4,"port":3}
