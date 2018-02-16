@@ -26,10 +26,13 @@ function SonyBraviaPlatform(log, config, api){
     this.ipadress = config["ipadress"];
     this.polling = config["polling"] === true;
     this.interval = (config['interval']*1000) || 2000;
+
+    //TV
     this.homeapp = config["homeapp"] || "";   
     this.uri = "";
     this.hdminame = "";
     this.maxVolume = config["maxVolume"] || 30;
+    this.extraInputs = config["extraInputs"] === true;
     
     //CECs
     this.cecname = "";
@@ -178,46 +181,46 @@ SonyBraviaPlatform.prototype = {
 								}
 							}
 							
-				          	objArray.forEach(function(element, index, array) {
+				          	        objArray.forEach(function(element, index, array) {
 						  		
-	                                var toConfig = {
-	                                    uri: element.uri,
-	                                    hdminame: element.title,
-                                            name: self.name,
-	                                    psk: self.psk,
-	                                    ipadress: self.ipadress,
-	                                    polling: self.polling,
-	                                    interval: self.interval,
-	                                    homeapp: self.homeapp
-	                                }
+	                                                var toConfig = {
+	                                                uri: element.uri,
+	                                                hdminame: element.title,
+                                                        name: self.name,
+	                                                psk: self.psk,
+	                                                ipadress: self.ipadress,
+	                                                polling: self.polling,
+	                                                interval: self.interval,
+	                                                homeapp: self.homeapp
+	                                                }
 									
-									if(self.config.cecs){
-								        self.config.cecs.forEach(function(cecswitch, index, array){
+							if(self.config.cecs){
+					  		self.config.cecs.forEach(function(cecswitch, index, array){
 							                   
-							                if(element.uri.match(cecswitch.port)){
-								                toConfig["cecname"] = cecswitch.label;
-								                toConfig["cecuri"] = "extInput:cec?type=player&port=" + cecswitch.port + "&logicalAddr=" + cecswitch.logaddr;
-								                toConfig["cecport"] = cecswitch.port;
-								                toConfig["ceclogaddr"] = cecswitch.logaddr;
-							                } else {
-								                return
-							                }
-							                
-							            })
+								if(element.uri.match(cecswitch.port)){
+									toConfig["cecname"] = cecswitch.label;
+								        toConfig["cecuri"] = "extInput:cec?type=player&port=" + cecswitch.port + "&logicalAddr=" + cecswitch.logaddr;
+								        toConfig["cecport"] = cecswitch.port;
+								        toConfig["ceclogaddr"] = cecswitch.logaddr;
+							        } else {
+								        return
 							        }
+							                
+							})
+							}
 	                               
-						  		hdmiArray.push(toConfig);
+						  	hdmiArray.push(toConfig);
 						  		
 							})
-						next(null, hdmiArray)
-						})
-					    .catch(err => {
+							next(null, hdmiArray)
+							})
+					    		.catch(err => {
 							self.log("Could not retrieve Source Inputs, error:" + err);
 							self.log("Fetching Source Input failed - Trying again...");
 							setTimeout(function(){
 								fetchSources(next)
-	                     	}, 10000)
-					    });	  	
+	                     				}, 10000)
+					    		});	  	
 				
 				}		  	
 				fetchSources(next)
@@ -247,6 +250,73 @@ SonyBraviaPlatform.prototype = {
 				})
 	
 			},
+
+                    
+		    //Push Extra Inputs
+	  		function(next){
+		  		function fetchExtras(next){
+					
+					reqHDMI({"token": process.argv[2]})
+						.then(response => {
+							
+							var result = response.result[0];
+							
+							var extraArray = []
+							var exobjArray = []
+							
+							for(var i = 0; i < result.length; i++){
+								if(result[i].title.match("AV") || result[i].icon.match("composite") || result[i].icon.match("wifidisplay")){
+									exobjArray.push(result[i]);
+								}
+							}
+							
+				          	        exobjArray.forEach(function(element, index, array) {
+							  		
+		                                                var extraConfig = {
+		                                                uri: element.uri,
+		                                                extraname: element.title,
+	                                                        name: self.name,
+		                                                psk: self.psk,
+		                                                ipadress: self.ipadress,
+		                                                polling: self.polling,
+		                                                interval: self.interval,
+		                                                homeapp: self.homeapp
+		                                                }
+		                               
+						  		extraArray.push(extraConfig);
+						  		
+							})
+							next(null, extraArray)
+							})
+					    		.catch(err => {
+							self.log("Could not retrieve Extra Source Inputs, error:" + err);
+							self.log("Fetching Extra Source Input failed - Trying again...");
+							setTimeout(function(){
+								fetchExtras(next)
+	                     				}, 10000)
+					    		});	  	
+				
+				}		  	
+				fetchExtras(next)
+			},
+
+	        // Create Extra Accessories 
+	        function(extraArray, next){
+                if(self.extraInputs){
+		        async.forEachOf(extraArray, function (zone, key, step) {
+			          
+			        function pushMyExtraAccessories(step){
+					        
+						var extraAccessory = new SonyExtraSourceAccessory(self.log, zone)
+						accessoriesArray.push(extraAccessory);
+						step()
+				
+					} pushMyExtraAccessories(step)
+				},	function(err){
+					if (err) next(err)
+					else next()
+				})}else{next();}
+	        },
 			
 	        // set Home App Switch
 	        function (next){
@@ -547,11 +617,6 @@ SonySourceAccessory.prototype.getSourceSwitch = function(callback){
 			  	
 				if(currentPower == "active"){
 					
-					self.log("STATE: " + state);
-					self.log("NAME: " + self.name);
-					self.log("newName: " + newName);
-					self.log("formatName: " + formatName);
-					
 					if(state.match(self.name)||state.match(formatName)||state.match(newName)){
 						callback(null, true)
 					} else {
@@ -649,6 +714,363 @@ SonySourceAccessory.prototype.setSourceSwitch = function(state, callback){
 							})
 						    .catch(err => {
 				                self.log("Cant set Source On (status code %s): %s", response.statusCode, err);
+				                callback(err)
+						    });
+							
+						}
+					  	
+					})
+					
+				}
+			})	
+		    .catch(err => {
+                self.log("Cant get TV status (status code %s): %s", response.statusCode, err);
+                callback(err)
+		    });	
+		    
+		} else {
+			
+			//TURN TO HOMEAPP
+			self.reqHomeAPP({"token": process.argv[2]})
+			.then(response => {
+				
+	            self.log("Turn OFF: " + self.name);
+	            callback(null, false)
+	            
+			})
+		    .catch(err => {
+                self.log("Cant set HOMEAPP On (status code %s): %s", response.statusCode, err);
+                callback(err)
+		    });
+		    
+		}
+  	
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      Sony Bravia      **************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+function SonyExtraSourceAccessory(log, config){
+	
+    var accessory = this;
+
+    this.log = log;
+    this.extraname = config.extraname
+    this.name = config.name + " " + this.extraname;
+    this.psk = config.psk;
+    this.ipadress = config.ipadress;
+    this.polling = config.polling;
+    this.interval = config.interval;
+    this.uri = config.uri;
+    this.homeapp = config.homeapp;
+
+    this.informationService = new Service.AccessoryInformation()
+        .setCharacteristic(Characteristic.Manufacturer, 'Sony')
+        .setCharacteristic(Characteristic.Model, 'Sony Bravia Source Control')
+        .setCharacteristic(Characteristic.SerialNumber, 'Bravia Serial Number');
+    
+    this.ExtraSourceSwitch = new Service.Switch(this.name);
+
+    this.ExtraSourceSwitch.getCharacteristic(Characteristic.On)
+        .on('get', this.getExtraSourceSwitch.bind(this))
+        .on('set', this.setExtraSourceSwitch.bind(this));
+
+	//SIMPLE POLLING
+	
+	if(this.polling){
+		(function poll(){
+			setTimeout(function(){
+				accessory.ExtraSourceSwitch.getCharacteristic(Characteristic.On).getValue();
+				poll()
+			}, accessory.interval)
+		})();
+	}
+
+	//REQUEST PROMISE LIST
+ 
+  	this.PowerStatus = {
+	  	
+	  	token: null,
+	  	
+	  	getPower: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/system",
+			    "body": {
+				  "method": "getPowerStatus",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqPower = function(params) {
+	  accessory.PowerStatus.token = params.token;
+	  return accessory.PowerStatus.getPower();
+	}
+	
+  	this.PowerON = {
+	  	
+	  	token: null,
+	  	
+	  	setPowerOn: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/system",
+			    "body": {
+				  "method": "setPowerStatus",
+				  "params": [{"status": true}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqPowerON = function(params) {
+	  accessory.PowerON.token = params.token;
+	  return accessory.PowerON.setPowerOn();
+	}
+	
+  	this.SourceStatus = {
+	  	
+	  	token: null,
+	  	
+	  	getSourceStatus: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/avContent",
+			    "body": {
+				  "method": "getPlayingContentInfo",
+				  "params": ["1.0"],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqSource = function(params) {	
+	  accessory.SourceStatus.token = params.token;
+	  return accessory.SourceStatus.getSourceStatus();
+	}
+	
+  	this.TargetSource = {
+	  	
+	  	token: null,
+	  	
+	  	setTargetSource: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/avContent",
+			    "body": {
+				  "method": "setPlayContent",
+				  "params": [{"uri": accessory.uri}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqTargetSource = function(params) {	
+	  accessory.TargetSource.token = params.token;
+	  return accessory.TargetSource.setTargetSource();
+	}
+	
+  	this.HomeAPP = {
+	  	
+	  	token: null,
+	  	
+	  	setHomeAPP: function() {
+		  	return rp({
+			  	
+			    "method": "POST",
+			    "uri": "http://" + accessory.ipadress + "/sony/appControl",
+			    "body": {
+				  "method": "setActiveApp",
+				  "params": [{"uri": accessory.homeapp}],
+				  "id": 1,
+				  "version": "1.0"
+			    },
+			    "headers": {
+				    "X-Auth-PSK": accessory.psk
+			    },
+			    "json":true
+			  	
+			});  	
+		}	  	
+	}
+	
+	this.reqHomeAPP = function(params) {
+	  accessory.HomeAPP.token = params.token;
+	  return accessory.HomeAPP.setHomeAPP();
+	}
+ 
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      GET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+SonyExtraSourceAccessory.prototype.getServices = function(){
+   return [this.informationService, this.ExtraSourceSwitch];
+}
+
+SonyExtraSourceAccessory.prototype._getCurrentState = function(callback){
+	
+	var self = this;
+	
+    self.reqSource({"token": process.argv[2]})
+	.then(response => {
+		
+		var state = JSON.stringify(response);
+        callback(null, state);
+		
+	})
+    .catch(err => {
+    	self.log("Could not retrieve status from " + self.name + "; error: " + err);
+		callback(err)
+    });	
+	
+}
+
+SonyExtraSourceAccessory.prototype.getExtraSourceSwitch = function(callback){
+	
+    var self = this;
+	
+    self._getCurrentState(function(err, state) {
+	        
+        if (err) callback (err)
+        else {
+	        
+	        self.reqPower({"token": process.argv[2]})
+			.then(response => {
+				
+				var currentPower = response.result[0].status;
+			  	
+				if(currentPower == "active"){
+					
+					if(state.match(self.name)){
+						callback(null, true)
+					} else {
+						callback(null, false)
+					}
+					
+				}else if(currentPower == "standby"){
+					callback(null, false)
+				} else {
+					self.log("Could not determine TV Status!")
+					callback(null, false)
+				}	
+				
+				
+			})
+		    .catch(err => {
+				self.log("Could not retrieve EXtra Source Status, error:" + err);
+				callback(err)
+		    });	 
+				      	
+        }
+    })
+	
+}
+
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+/*******************************************************************      SET      **********************************************************************/
+/********************************************************************************************************************************************************/
+/********************************************************************************************************************************************************/
+
+SonyExtraSourceAccessory.prototype.setExtraSourceSwitch = function(state, callback){
+	
+	var self = this;
+		
+		if(state){
+			
+	        self.reqPower({"token": process.argv[2]})
+			.then(response => {
+				
+				var currentPower = response.result[0].status;	
+				
+				if (currentPower == "active"){
+					
+					//TV ON - ACTIVATE SOURCE
+					self.reqTargetSource({"token": process.argv[2]})
+					.then(response => {
+						
+			            self.log("Activate " + self.name);
+			            callback(null, true)
+					})
+				    .catch(err => {
+		                self.log("Cant set Extra Source On (status code %s): %s", response.statusCode, err);
+		                callback(err)
+				    });
+					    
+				} else {
+					
+					// TV IS OFF - TURN ON
+					self.reqPowerON({"token": process.argv[2]})
+					.then(response => {
+						
+			            self.log("Turning on the TV");
+			            
+					})
+				    .catch(err => {
+		                self.log("Cant set TV On (status code %s): %s", response.statusCode, err);
+		                callback(err)
+				    });
+				  	
+				  	self._getCurrentState(function(err, state) {
+					  	
+						if(state.match(self.name)){
+							self.log(self.name + " already on");
+							
+							callback(null, true)
+							
+						} else {
+							self.log("Turn ON: " + self.name);
+							
+							// TV ON NOW - ACTIVATE SOURCE
+							self.reqTargetSource({"token": process.argv[2]})
+							.then(response => {
+								
+					            self.log("Activate " + self.name);
+					            callback(null, true)
+							})
+						    .catch(err => {
+				                self.log("Cant set Extra Source On (status code %s): %s", response.statusCode, err);
 				                callback(err)
 						    });
 							
