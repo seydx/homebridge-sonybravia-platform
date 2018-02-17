@@ -41,7 +41,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "ipadress":"192.168.1.1",
   "psk":"YourPSK",
   "polling":true,
-  "interval": 2,
+  "interval": 5,
   "maxVolume":30,
   "extraInputs":true,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
