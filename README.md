@@ -122,6 +122,8 @@ This platform and the switches it creates have been verified to work with the fo
 - ~~TODO: Bulb for volume up/down~~
 - ~~TODO: Service to switch between apps~~
 - TODO: Service to switch between Channels
+- TODO: Support Wake on Lan
+- TODO: Better error handling
 
 
 ## Contributing
