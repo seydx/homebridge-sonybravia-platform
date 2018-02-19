@@ -24,6 +24,10 @@ class EXTRAS {
         this.interval = config.interval;
         this.uri = config.uri;
         this.homeapp = config.homeapp;
+        
+        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
+            "token": process.argv[2]
+        }, accessory.homeapp);
     }
 
     getServices() {
@@ -40,10 +44,6 @@ class EXTRAS {
         this.ExtraSourceSwitch.getCharacteristic(Characteristic.On)
             .on('get', this.getExtraSourceSwitch.bind(this))
             .on('set', this.setExtraSourceSwitch.bind(this));
-
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
-            "token": process.argv[2]
-        }, accessory.homeapp);
 
         //SIMPLE POLLING
 
@@ -139,7 +139,7 @@ class EXTRAS {
                                 callback(null, true)
                             })
                             .catch(err => {
-                                self.log("Could not set Extra Source on (status code %s): %s", response.statusCode, err);
+                                self.log("Could not set Extra Source on (status code %s): %s", err.statusCode, err);
                                 callback(null, false)
                             });
 
@@ -191,7 +191,7 @@ class EXTRAS {
                                                                     callback(null, true)
                                                                 })
                                                                 .catch(err => {
-                                                                    self.log("Could not set Extra Source on (status code %s): %s", response.statusCode, err);
+                                                                    self.log("Could not set Extra Source on (status code %s): %s", err.statusCode, err);
                                                                     callback(null, false)
                                                                 });
 
@@ -256,7 +256,7 @@ class EXTRAS {
                                                                     callback(null, true)
                                                                 })
                                                                 .catch(err => {
-                                                                    self.log("Could not set Extra Source on (status code %s): %s", response.statusCode, err);
+                                                                    self.log("Could not set Extra Source on (status code %s): %s", err.statusCode, err);
                                                                     callback(null, false)
                                                                 });
 
@@ -281,7 +281,7 @@ class EXTRAS {
 
                                 })
                                 .catch(err => {
-                                    self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
+                                    self.log("Could not set TV on (status code %s): %s", err.statusCode, err);
                                     callback(null, false)
                                 });
 
@@ -290,7 +290,7 @@ class EXTRAS {
                     }
                 })
                 .catch(err => {
-                    self.log("Could not get TV status (status code %s): %s", response.statusCode, err);
+                    self.log("Could not get TV status (status code %s): %s", err.statusCode, err);
                     callback(null, false)
                 });
 
@@ -305,7 +305,7 @@ class EXTRAS {
 
                 })
                 .catch(err => {
-                    self.log("Could not set Home App on (status code %s): %s", response.statusCode, err);
+                    self.log("Could not set Home App on (status code %s): %s", err.statusCode, err);
                     callback(null, false)
                 });
 
