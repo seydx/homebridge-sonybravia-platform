@@ -1,6 +1,6 @@
 {
   "name": "homebridge-sonybravia-platform",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "homebridge-sonybravia-platform",
   "main": "index.js",
   "devDependencies": {},
@@ -32,6 +32,7 @@
   "dependencies": {
     "async": "*",
     "request-promise": "^4.2.2",
-    "request":"*"
+    "request":"*",
+    "wake_on_lan": "0.0.4"
   }
 }
