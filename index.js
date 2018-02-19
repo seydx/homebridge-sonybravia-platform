@@ -3,7 +3,6 @@ var rp = require("request-promise"),
 
 var HK_TYPES = require("./src/HomeKitTypes.js");
 var HK_REQS = require('./src/Requests.js');
-
 var TV_Accessory = require('./accessories/tvswitch.js');
 var VOLUME_Accessory = require('./accessories/volumeaccesory.js');
 var APP_Accessory = require('./accessories/appservice.js');
@@ -30,20 +29,16 @@ function SonyBraviaPlatform(log, config, api) {
 
     this.config = config;
     this.log = log;
-    this.name = config["name"];
+    this.name = config["name"] || "Sony";
     this.psk = config["psk"];
     this.ipadress = config["ipadress"];
+    this.mac = config["mac"] || "";
     this.polling = config["polling"] === true;
-    this.interval = (config['interval'] * 1000) || 2000;
-    this.homeapp = config["homeapp"] || "";
-    this.uri = "";
-    this.hdminame = "";
+    this.interval = (config['interval'] * 1000) || 5000;
+    this.homeapp = config["homeapp"];
+    	if(this.polling == undefined || this.polling == "" || this.polling == null){platform.log("No Home App defined, setting Home App to YouTube!");this.homeapp = "com.sony.dtv.com.google.android.youtube.tv.com.google.android.apps.youtube.tv.cobalt.activity.ShellActivity";}
     this.maxVolume = config["maxVolume"] || 30;
     this.extraInputs = config["extraInputs"] === true;
-    this.cecname = "";
-    this.cecuri = "";
-    this.cecport = "";
-    this.ceclogaddr = "";
     this.cecs = config["cecs"] || [""];
     this.maxApps = "";
 
@@ -70,6 +65,7 @@ SonyBraviaPlatform.prototype = {
                             name: self.name,
                             psk: self.psk,
                             ipadress: self.ipadress,
+                            mac: self.mac,
                             polling: self.polling,
                             interval: self.interval,
                             homeapp: self.homeapp
@@ -91,6 +87,7 @@ SonyBraviaPlatform.prototype = {
                                     name: self.name,
                                     psk: self.psk,
                                     ipadress: self.ipadress,
+                                    mac: self.mac,
                                     polling: self.polling,
                                     interval: self.interval,
                                     maxApps: self.maxApps
@@ -101,7 +98,7 @@ SonyBraviaPlatform.prototype = {
 
                             })
                             .catch(err => {
-                                self.log("Could not retrieve Apps, error:" + err);
+                                self.log("Could not retrieve apps:" + err);
                             });
 
                         next();
@@ -134,6 +131,7 @@ SonyBraviaPlatform.prototype = {
                                             name: self.name,
                                             psk: self.psk,
                                             ipadress: self.ipadress,
+                                            mac: self.mac,
                                             polling: self.polling,
                                             interval: self.interval,
                                             homeapp: self.homeapp
@@ -161,7 +159,7 @@ SonyBraviaPlatform.prototype = {
                                     next(null, hdmiArray)
                                 })
                                 .catch(err => {
-                                    self.log("Could not retrieve Source Inputs, error:" + err);
+                                    self.log("Could not retrieve Source Inputs: " + err);
                                     self.log("Fetching Source Input failed - Trying again...");
                                     setTimeout(function() {
                                         fetchSources(next)
@@ -178,13 +176,7 @@ SonyBraviaPlatform.prototype = {
                         async.forEachOf(hdmiArray, function(zone, key, step) {
 
                             function pushMyAccessories(step) {
-
-                                if (zone.cecname) {
-                                    self.log("Found Source: " + zone.cecname);
-                                } else {
-                                    self.log("Found Source: " + zone.hdminame);
-                                }
-
+	                            
                                 var hdmiAccessory = new SOURCE_Accessory(self.log, zone, self.api)
                                 accessoriesArray.push(hdmiAccessory);
                                 step()
@@ -225,6 +217,7 @@ SonyBraviaPlatform.prototype = {
                                             name: self.name,
                                             psk: self.psk,
                                             ipadress: self.ipadress,
+                                            mac: self.mac,
                                             polling: self.polling,
                                             interval: self.interval,
                                             homeapp: self.homeapp
@@ -236,7 +229,7 @@ SonyBraviaPlatform.prototype = {
                                     next(null, extraArray)
                                 })
                                 .catch(err => {
-                                    self.log("Could not retrieve Extra Source Inputs, error:" + err);
+                                    self.log("Could not retrieve Extra Source Inputs: " + err);
                                     self.log("Fetching Extra Source Input failed - Trying again...");
                                     setTimeout(function() {
                                         fetchExtras(next)
@@ -253,9 +246,7 @@ SonyBraviaPlatform.prototype = {
                             async.forEachOf(extraArray, function(zone, key, step) {
 
                                 function pushMyExtraAccessories(step) {
-
-                                    self.log("Found Extra Source Input: " + zone.extraname);
-
+	                                
                                     var extraAccessory = new EXTRAS_Accessory(self.log, zone, self.api)
                                     accessoriesArray.push(extraAccessory);
                                     step()
@@ -278,6 +269,7 @@ SonyBraviaPlatform.prototype = {
                             name: self.name,
                             psk: self.psk,
                             ipadress: self.ipadress,
+                            mac: self.mac,
                             polling: self.polling,
                             interval: self.interval,
                             homeapp: self.homeapp
@@ -294,6 +286,7 @@ SonyBraviaPlatform.prototype = {
                             name: self.name,
                             psk: self.psk,
                             ipadress: self.ipadress,
+                            mac: self.mac,
                             polling: self.polling,
                             interval: self.interval,
                             maxVolume: self.maxVolume
