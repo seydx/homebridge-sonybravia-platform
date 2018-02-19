@@ -23,6 +23,10 @@ class TVSWITCH {
         this.interval = config.interval;
         this.uri = config.uri;
         this.homeapp = config.homeapp;
+        
+        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
+            "token": process.argv[2]
+        }, accessory.homeapp);
 
     }
 
@@ -40,10 +44,6 @@ class TVSWITCH {
         this.TVSwitch.getCharacteristic(Characteristic.On)
             .on('get', this.getTVSwitch.bind(this))
             .on('set', this.setTVSwitch.bind(this));
-
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
-            "token": process.argv[2]
-        }, accessory.homeapp);
 
         if (this.polling) {
             (function poll() {
