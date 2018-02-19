@@ -114,7 +114,7 @@ class TVSWITCH {
 
                     })
                     .catch(err => {
-                        self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
+                        self.log("Could not set TV on (status code %s): %s", err.statusCode, err);
                         callback(null, false)
                     });
 
@@ -130,7 +130,7 @@ class TVSWITCH {
 
                 })
                 .catch(err => {
-                    self.log("Could not set TV off (status code %s): %s", response.statusCode, err);
+                    self.log("Could not set TV off (status code %s): %s", err.statusCode, err);
                     callback(null, false)
                 });
         }
