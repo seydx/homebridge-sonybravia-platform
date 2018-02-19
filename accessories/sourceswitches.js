@@ -35,6 +35,10 @@ class SOURCES {
             this.name = config.name + " " + this.cecname;
             this.hdmiuri = "extInput:hdmi?port=" + config.cecport;
         }
+        
+        this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
+            "token": process.argv[2]
+        }, platform.homeapp, platform.cecuri, platform.hdmiuri);
     }
 
     getServices() {
@@ -51,10 +55,6 @@ class SOURCES {
         this.SourceSwitch.getCharacteristic(Characteristic.On)
             .on('get', this.getSourceSwitch.bind(this))
             .on('set', this.setSourceSwitch.bind(this));
-
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
-            "token": process.argv[2]
-        }, accessory.homeapp, accessory.cecuri, accessory.hdmiuri);
 
         //SIMPLE POLLING
 
@@ -165,7 +165,7 @@ class SOURCES {
                                             callback(null, true)
                                         })
                                         .catch(err => {
-                                            self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                            self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
                                             callback(null, false)
                                         });
                                 } else {
@@ -174,7 +174,7 @@ class SOURCES {
 
                             })
                             .catch(err => {
-                                self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
                                 callback(null, false)
                             });
 
@@ -226,7 +226,7 @@ class SOURCES {
                                                                     callback(null, true)
                                                                 })
                                                                 .catch(err => {
-                                                                    self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                    self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
                                                                     callback(null, false)
                                                                 });
 
@@ -299,7 +299,7 @@ class SOURCES {
                                                                                 callback(null, true)
                                                                             })
                                                                             .catch(err => {
-                                                                                self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                                self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
                                                                                 callback(null, false)
                                                                             });
 
@@ -312,7 +312,7 @@ class SOURCES {
 
                                                             })
                                                             .catch(err => {
-                                                                self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
                                                                 callback(null, false)
                                                             });
 
@@ -335,7 +335,7 @@ class SOURCES {
 
                                 })
                                 .catch(err => {
-                                    self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
+                                    self.log("Could not set TV on (status code %s): %s", err.statusCode, err);
                                     callback(null, false)
                                 });
 
@@ -344,7 +344,7 @@ class SOURCES {
                     }
                 })
                 .catch(err => {
-                    self.log("Could not get TV status (status code %s): %s", response.statusCode, err);
+                    self.log("Could not get TV status (status code %s): %s", err.statusCode, err);
                     callback(null, false)
                 });
 
@@ -359,7 +359,7 @@ class SOURCES {
 
                 })
                 .catch(err => {
-                    self.log("Could not set Home App on (status code %s): %s", response.statusCode, err);
+                    self.log("Could not set Home App on (status code %s): %s", err.statusCode, err);
                     callback(null, false)
                 });
 
