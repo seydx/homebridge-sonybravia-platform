@@ -113,12 +113,11 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            console.log(err)
+                            self.log("Could not retrieve mute state: " + err);
                             callback(false, false)
                         });
 
                 } else {
-
                     callback(false, false)
 
                 }
@@ -126,7 +125,7 @@ class VOLUME {
             })
             .catch(err => {
                 self.log("Could not get TV status: " + err);
-                callback(false, 0)
+                callback(false, false)
             });
 
     }
@@ -163,12 +162,11 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            console.log(err)
+                            self.log("Could not retrieve volume state: " + err);
                             callback(false, 0)
                         });
 
                 } else {
-
                     callback(false, 0)
 
                 }
@@ -218,7 +216,7 @@ class VOLUME {
                 });
 
         } else {
-	        
+
             self.get.powerstate()
                 .then(response => {
 
@@ -226,17 +224,17 @@ class VOLUME {
 
                     if (currentPower == "active") {
 
-			            self.get.muteoff()
-			                .then(response => {
-			
-			                    self.log("Deactivate: " + self.name);
-			                    callback(false, false)
-			
-			                })
-			                .catch(err => {
-			                    self.log("Could not disable Volume: " + err);
-			                    callback(false, false)
-			                });
+                        self.get.muteoff()
+                            .then(response => {
+
+                                self.log("Deactivate: " + self.name);
+                                callback(false, false)
+
+                            })
+                            .catch(err => {
+                                self.log("Could not disable Volume: " + err);
+                                callback(false, false)
+                            });
 
                     } else {
 
@@ -250,7 +248,7 @@ class VOLUME {
                     self.log("Could not get TV status: " + err);
                     callback(false, false)
                 });
-                
+
         }
 
     }
@@ -312,7 +310,7 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            console.log("Could not set volume: " + err)
+                            self.log("Could not set volume: " + err)
                             callback()
                         });
 
