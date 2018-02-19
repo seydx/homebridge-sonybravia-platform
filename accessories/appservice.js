@@ -25,6 +25,10 @@ class APP_ACCESSORY {
         this.maxApps = config.maxApps;
 
         HK_TYPES.registerWith(api);
+        
+        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
+            "token": process.argv[2]
+        }, accessory.homeapp);
 
     }
 
@@ -47,10 +51,6 @@ class APP_ACCESSORY {
             })
             .on("get", this.getTargetApp.bind(this))
             .on("set", this.setTargetApp.bind(this));
-
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
-            "token": process.argv[2]
-        }, accessory.homeapp);
 
         if (this.polling) {
             (function poll() {
