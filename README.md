@@ -88,12 +88,16 @@ If you want to control your CEC devices too, do following steps (it is important
 
 This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possibpe to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
+## WOL (Wake on LAN)
+If you have problems starting the TV with the IP adress, you can also try it with the MAC adress (WOL) - see example-config.json
+
 ## Options
 
 | **Attributes** | **Required** | **Usage** |
 |------------|----------|-------|
 | name | **Yes** | **Unique Name** for the Platform.   |
 | ipadress | **Yes** | IP adress from your Sony Bravia TV |
+| mac | No | MAC adress from the TV for Wake On Lan |
 | psk | **Yes** | Your Pre Shared Key |
 | polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
@@ -122,8 +126,8 @@ This platform and the switches it creates have been verified to work with the fo
 - ~~TODO: Bulb for volume up/down~~
 - ~~TODO: Service to switch between apps~~
 - TODO: Service to switch between Channels
-- TODO: Support Wake on Lan
-- TODO: Better error handling
+- ~~TODO: Support Wake on Lan~~
+- ~~TODO: Better error handling~~
 
 
 ## Contributing
