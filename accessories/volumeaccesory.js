@@ -19,6 +19,7 @@ class VOLUME {
         this.name = config.name + " Volume";
         this.psk = config.psk;
         this.ipadress = config.ipadress;
+        this.mac = config.mac;
         this.polling = config.polling;
         this.interval = config.interval;
         this.maxVolume = config.maxVolume;
@@ -124,7 +125,7 @@ class VOLUME {
 
             })
             .catch(err => {
-                self.log("Cant get TV State: " + err);
+                self.log("Could not get TV status: " + err);
                 callback(false, 0)
             });
 
@@ -174,7 +175,7 @@ class VOLUME {
 
             })
             .catch(err => {
-                self.log("Cant get TV State: " + err);
+                self.log("Could not get TV status: " + err);
                 callback(false, 0)
             });
     }
@@ -199,20 +200,20 @@ class VOLUME {
                                 callback(false, true)
                             })
                             .catch(err => {
-                                self.log("Cant get Mute State: " + err);
+                                self.log("Could not get Volume status: " + err);
                                 callback(false, false)
                             });
 
                     } else {
 
-                        self.log("Can't set mute state, TV is OFF");
+                        self.log("Could not set mute state, TV is off");
                         callback(false, false)
 
                     }
 
                 })
                 .catch(err => {
-                    self.log("Cant get TV State: " + err);
+                    self.log("Could not get TV status: " + err);
                     callback(false, false)
                 });
 
@@ -233,20 +234,20 @@ class VOLUME {
 			
 			                })
 			                .catch(err => {
-			                    self.log("Cant disable Volume: " + err);
+			                    self.log("Could not disable Volume: " + err);
 			                    callback(false, false)
 			                });
 
                     } else {
 
-                        self.log("Can't set mute state off, TV is OFF");
+                        self.log("Could not set mute state off, TV is off");
                         callback(false, false)
 
                     }
 
                 })
                 .catch(err => {
-                    self.log("Cant get TV State: " + err);
+                    self.log("Could not get TV status: " + err);
                     callback(false, false)
                 });
                 
@@ -311,7 +312,7 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            console.log("Can't set target volume! " + err)
+                            console.log("Could not set volume: " + err)
                             callback()
                         });
 
@@ -323,7 +324,7 @@ class VOLUME {
 
             })
             .catch(err => {
-                self.log("Cant get TV State: " + err);
+                self.log("Could not get TV status: " + err);
                 callback()
             });
     }
