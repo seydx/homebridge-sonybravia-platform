@@ -10,6 +10,7 @@
   "platform":"SonyBravia",
   "name":"Sony Bravia",
   "ipadress":"192.168.1.1",
+  "mac":"01:02:03:04:05:06", //PUT MAC ADRESS ONLY IF YOU HAVE PROBLEMS WITH THE IP ADRESS
   "psk":"YourPSK",
   "polling":true,
   "interval": 5,
