@@ -19,6 +19,7 @@ class APP_ACCESSORY {
         this.name = config.name + " Apps";
         this.psk = config.psk;
         this.ipadress = config.ipadress;
+        this.mac = config.mac;
         this.polling = config.polling;
         this.interval = config.interval;
         this.maxApps = config.maxApps;
@@ -82,14 +83,14 @@ class APP_ACCESSORY {
                 var apps = response.result[0].length;
 
 
-                console.log("Following, a list of all installed Apps on the TV to create awesome scenes! Have fun.");
+                accessory.log("Following, a list of all installed Apps on the TV. Have fun.");
                 for (var i = 0; i < apps; i++) {
-                    console.log("App: " + name[i].title + " - Number: " + i);
+                    accessory.log("App: " + name[i].title + " - Number: " + i);
                 }
 
             })
             .catch(err => {
-                console.log(err)
+                accessory.log("Could not retrieve app list: " + err)
             });
 
         return [this.informationService, this.AppService];
@@ -134,7 +135,7 @@ class APP_ACCESSORY {
 
             })
             .catch(err => {
-                console.log(err)
+                self.log("Could not retrieve app name: " + err)
                 callback(false, "ERROR")
             });
 
@@ -207,14 +208,14 @@ class APP_ACCESSORY {
 
                     })
                     .catch(err => {
-                        console.log(err)
+                        self.log("Could not set " + self.appName + ": " + err)
                         callback()
                     });
 
 
             })
             .catch(err => {
-                console.log(err)
+                self.log("Could not retrieve apps: " + err)
                 callback()
             });
     }
