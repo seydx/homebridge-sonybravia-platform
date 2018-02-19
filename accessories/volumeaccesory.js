@@ -26,7 +26,7 @@ class VOLUME {
 
         HK_TYPES.registerWith(api);
         
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
+        this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
             "token": process.argv[2]
         });
     }
