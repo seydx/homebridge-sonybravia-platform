@@ -26,17 +26,15 @@ class SOURCES {
         this.homeapp = config.homeapp;
         this.cecname = config.cecname;
         this.cecuri = config.cecuri;
+        this.hdmiuri = config.uri;
         this.cecport = config.cecport;
-        this.logaddr = config.logaddr;
+        this.ceclogaddr = config.ceclogaddr;
 
         if (this.cecname) {
             this.uri = this.cecuri;
             this.name = config.name + " " + this.cecname;
+            this.hdmiuri = "extInput:hdmi?port=" + config.cecport;
         }
-
-        this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
-            "token": process.argv[2]
-        });
     }
 
     getServices() {
@@ -56,7 +54,7 @@ class SOURCES {
 
         this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
             "token": process.argv[2]
-        }, accessory.homeapp, accessory.cecuri);
+        }, accessory.homeapp, accessory.cecuri, accessory.hdmiuri);
 
         //SIMPLE POLLING
 
@@ -104,8 +102,7 @@ class SOURCES {
 
                         var currentPower = response.result[0].status;
                         var formatName = self.name.split("/")[0]
-
-                        var newName = self.name;
+                        var newName = self.name
 
                         if (self.cecname) {
                             self.name = self.cecname;
@@ -117,7 +114,7 @@ class SOURCES {
 
                         if (currentPower == "active") {
 
-                            if (state.match(self.name) || state.match(formatName) || state.match(newName)) {
+                            if (state.match(self.name) || state.match(formatName) || state.match(newName) || state.match("logicalAddr=" + self.ceclogaddr) ||  state.match(self.uri)) {
                                 callback(null, true)
                             } else {
                                 callback(null, false)
@@ -156,11 +153,25 @@ class SOURCES {
                     if (currentPower == "active") {
 
                         //TV ON - ACTIVATE SOURCE
-                        self.get.setcontent()
+                        self.get.sethdmi()
                             .then(response => {
+                                self.log("Activate " + self.hdminame);
 
-                                self.log("Activate " + self.name);
-                                callback(null, true)
+                                if (self.cecname) {
+                                    self.get.setcontent()
+                                        .then(response => {
+
+                                            self.log("CEC detected, activate " + self.name);
+                                            callback(null, true)
+                                        })
+                                        .catch(err => {
+                                            self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                            callback(null, false)
+                                        });
+                                } else {
+                                    callback(null, true)
+                                }
+
                             })
                             .catch(err => {
                                 self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
@@ -263,29 +274,47 @@ class SOURCES {
 
                                                     } else {
 
-                                                        self.log("Connecting to " + self.name);
+                                                        self.get.sethdmi()
+                                                            .then(response => {
 
-                                                        function sleep(time) {
-                                                            return new Promise((resolve) => setTimeout(resolve, time));
-                                                        }
+                                                                self.log("Activate " + self.hdminame);
 
-                                                        sleep(5000).then(() => {
+                                                                if (self.cecname) {
 
-                                                            self.log("Connected!");
+                                                                    self.log("CEC detected, Connecting to " + self.name);
 
-                                                            // TV ON NOW - ACTIVATE SOURCE
-                                                            self.get.setcontent()
-                                                                .then(response => {
+                                                                    function sleep(time) {
+                                                                        return new Promise((resolve) => setTimeout(resolve, time));
+                                                                    }
 
-                                                                    self.log("Activate " + self.name);
-                                                                    callback(null, true)
-                                                                })
-                                                                .catch(err => {
-                                                                    self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
-                                                                    callback(null, false)
-                                                                });
+                                                                    sleep(5000).then(() => {
 
-                                                        });
+                                                                        self.log("Connected!");
+
+                                                                        // TV ON NOW - ACTIVATE SOURCE
+                                                                        self.get.setcontent()
+                                                                            .then(response => {
+
+                                                                                self.log("Activate " + self.name);
+                                                                                callback(null, true)
+                                                                            })
+                                                                            .catch(err => {
+                                                                                self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                                callback(null, false)
+                                                                            });
+
+                                                                    });
+
+                                                                } else {
+                                                                    callback(null, )
+                                                                }
+
+
+                                                            })
+                                                            .catch(err => {
+                                                                self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                callback(null, false)
+                                                            });
 
                                                     }
 
