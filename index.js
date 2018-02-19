@@ -36,7 +36,10 @@ function SonyBraviaPlatform(log, config, api) {
     this.polling = config["polling"] === true;
     this.interval = (config['interval'] * 1000) || 5000;
     this.homeapp = config["homeapp"];
-    	if(this.polling == undefined || this.polling == "" || this.polling == null){platform.log("No Home App defined, setting Home App to YouTube!");this.homeapp = "com.sony.dtv.com.google.android.youtube.tv.com.google.android.apps.youtube.tv.cobalt.activity.ShellActivity";}
+    if (this.polling == undefined || this.polling == "" || this.polling == null) {
+        platform.log("No Home App defined, setting Home App to YouTube!");
+        this.homeapp = "com.sony.dtv.com.google.android.youtube.tv.com.google.android.apps.youtube.tv.cobalt.activity.ShellActivity";
+    }
     this.maxVolume = config["maxVolume"] || 30;
     this.extraInputs = config["extraInputs"] === true;
     this.cecs = config["cecs"] || [""];
@@ -53,257 +56,257 @@ SonyBraviaPlatform.prototype = {
 
     accessories: function(callback) {
 
-            var self = this;
-            var accessoriesArray = []
+        var self = this;
+        var accessoriesArray = []
 
-            async.waterfall([
+        async.waterfall([
 
-                    // set TV Switch
-                    function(next) {
-                        var tvConfig = {
-                            uri: self.uri,
-                            name: self.name,
-                            psk: self.psk,
-                            ipadress: self.ipadress,
-                            mac: self.mac,
-                            polling: self.polling,
-                            interval: self.interval,
-                            homeapp: self.homeapp
-                        }
-                        var tvAccessory = new TV_Accessory(self.log, tvConfig, self.api)
-                        accessoriesArray.push(tvAccessory);
-                        next();
-                    },
+                // set TV Switch
+                function(next) {
+                    var tvConfig = {
+                        uri: self.uri,
+                        name: self.name,
+                        psk: self.psk,
+                        ipadress: self.ipadress,
+                        mac: self.mac,
+                        polling: self.polling,
+                        interval: self.interval,
+                        homeapp: self.homeapp
+                    }
+                    var tvAccessory = new TV_Accessory(self.log, tvConfig, self.api)
+                    accessoriesArray.push(tvAccessory);
+                    next();
+                },
 
-                    // set APP Service
-                    function(next) {
+                // set APP Service
+                function(next) {
 
-                        self.get.apps()
+                    self.get.apps()
+                        .then(response => {
+
+                            self.maxApps = response.result[0].length;
+
+                            var appListConfig = {
+                                name: self.name,
+                                psk: self.psk,
+                                ipadress: self.ipadress,
+                                mac: self.mac,
+                                polling: self.polling,
+                                interval: self.interval,
+                                maxApps: self.maxApps
+                            }
+
+                            var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
+                            accessoriesArray.push(appListAccessory);
+
+                        })
+                        .catch(err => {
+                            self.log("Could not retrieve apps:" + err);
+                        });
+
+                    next();
+                },
+
+                //Push HDMI/CEC
+                function(next) {
+
+                    function fetchSources(next) {
+
+                        self.get.inputs()
                             .then(response => {
 
-                                self.maxApps = response.result[0].length;
+                                var result = response.result[0];
 
-                                var appListConfig = {
-                                    name: self.name,
-                                    psk: self.psk,
-                                    ipadress: self.ipadress,
-                                    mac: self.mac,
-                                    polling: self.polling,
-                                    interval: self.interval,
-                                    maxApps: self.maxApps
+                                var hdmiArray = []
+                                var objArray = []
+
+                                for (var i = 0; i < result.length; i++) {
+                                    if (result[i].title.match("HDMI")) {
+                                        objArray.push(result[i]);
+                                    }
                                 }
 
-                                var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
-                                accessoriesArray.push(appListAccessory);
+                                objArray.forEach(function(element, index, array) {
 
-                            })
-                            .catch(err => {
-                                self.log("Could not retrieve apps:" + err);
-                            });
-
-                        next();
-                    },
-
-                    //Push HDMI/CEC
-                    function(next) {
-
-                        function fetchSources(next) {
-
-                            self.get.inputs()
-                                .then(response => {
-
-                                    var result = response.result[0];
-
-                                    var hdmiArray = []
-                                    var objArray = []
-
-                                    for (var i = 0; i < result.length; i++) {
-                                        if (result[i].title.match("HDMI")) {
-                                            objArray.push(result[i]);
-                                        }
+                                    var toConfig = {
+                                        uri: element.uri,
+                                        hdminame: element.title,
+                                        name: self.name,
+                                        psk: self.psk,
+                                        ipadress: self.ipadress,
+                                        mac: self.mac,
+                                        polling: self.polling,
+                                        interval: self.interval,
+                                        homeapp: self.homeapp
                                     }
 
-                                    objArray.forEach(function(element, index, array) {
+                                    if (self.config.cecs) {
+                                        self.config.cecs.forEach(function(cecswitch, index, array) {
 
-                                        var toConfig = {
-                                            uri: element.uri,
-                                            hdminame: element.title,
-                                            name: self.name,
-                                            psk: self.psk,
-                                            ipadress: self.ipadress,
-                                            mac: self.mac,
-                                            polling: self.polling,
-                                            interval: self.interval,
-                                            homeapp: self.homeapp
-                                        }
+                                            if (element.uri.match(cecswitch.port)) {
+                                                toConfig["cecname"] = cecswitch.label;
+                                                toConfig["cecuri"] = "extInput:cec?type=player&port=" + cecswitch.port + "&logicalAddr=" + cecswitch.logaddr;
+                                                toConfig["cecport"] = cecswitch.port;
+                                                toConfig["ceclogaddr"] = cecswitch.logaddr;
+                                            } else {
+                                                return
+                                            }
 
-                                        if (self.config.cecs) {
-                                            self.config.cecs.forEach(function(cecswitch, index, array) {
+                                        })
+                                    }
 
-                                                if (element.uri.match(cecswitch.port)) {
-                                                    toConfig["cecname"] = cecswitch.label;
-                                                    toConfig["cecuri"] = "extInput:cec?type=player&port=" + cecswitch.port + "&logicalAddr=" + cecswitch.logaddr;
-                                                    toConfig["cecport"] = cecswitch.port;
-                                                    toConfig["ceclogaddr"] = cecswitch.logaddr;
-                                                } else {
-                                                    return
-                                                }
+                                    hdmiArray.push(toConfig);
 
-                                            })
-                                        }
-
-                                        hdmiArray.push(toConfig);
-
-                                    })
-
-                                    next(null, hdmiArray)
                                 })
-                                .catch(err => {
-                                    self.log("Could not retrieve Source Inputs: " + err);
-                                    self.log("Fetching Source Input failed - Trying again...");
-                                    setTimeout(function() {
-                                        fetchSources(next)
-                                    }, 10000)
-                                });
+
+                                next(null, hdmiArray)
+                            })
+                            .catch(err => {
+                                self.log("Could not retrieve Source Inputs: " + err);
+                                self.log("Fetching Source Input failed - Trying again...");
+                                setTimeout(function() {
+                                    fetchSources(next)
+                                }, 10000)
+                            });
+
+                    }
+                    fetchSources(next)
+                },
+
+                // Create HDMI/CEC Accessories  
+                function(hdmiArray, next) {
+
+                    async.forEachOf(hdmiArray, function(zone, key, step) {
+
+                        function pushMyAccessories(step) {
+
+                            var hdmiAccessory = new SOURCE_Accessory(self.log, zone, self.api)
+                            accessoriesArray.push(hdmiAccessory);
+                            step()
 
                         }
-                        fetchSources(next)
-                    },
+                        pushMyAccessories(step)
+                    }, function(err) {
+                        if (err) next(err)
+                        else next()
+                    })
 
-                    // Create HDMI/CEC Accessories  
-                    function(hdmiArray, next) {
+                },
 
-                        async.forEachOf(hdmiArray, function(zone, key, step) {
 
-                            function pushMyAccessories(step) {
-	                            
-                                var hdmiAccessory = new SOURCE_Accessory(self.log, zone, self.api)
-                                accessoriesArray.push(hdmiAccessory);
+                //Push Extra Inputs
+                function(next) {
+                    function fetchExtras(next) {
+
+                        self.get.inputs()
+                            .then(response => {
+
+                                var result = response.result[0];
+
+                                var extraArray = []
+                                var exobjArray = []
+
+                                for (var i = 0; i < result.length; i++) {
+                                    if (result[i].title.match("AV") || result[i].icon.match("composite") || result[i].icon.match("wifidisplay")) {
+                                        exobjArray.push(result[i]);
+                                    }
+                                }
+
+                                exobjArray.forEach(function(element, index, array) {
+
+                                    var extraConfig = {
+                                        uri: element.uri,
+                                        extraname: element.title,
+                                        name: self.name,
+                                        psk: self.psk,
+                                        ipadress: self.ipadress,
+                                        mac: self.mac,
+                                        polling: self.polling,
+                                        interval: self.interval,
+                                        homeapp: self.homeapp
+                                    }
+
+                                    extraArray.push(extraConfig);
+
+                                })
+                                next(null, extraArray)
+                            })
+                            .catch(err => {
+                                self.log("Could not retrieve Extra Source Inputs: " + err);
+                                self.log("Fetching Extra Source Input failed - Trying again...");
+                                setTimeout(function() {
+                                    fetchExtras(next)
+                                }, 10000)
+                            });
+
+                    }
+                    fetchExtras(next)
+                },
+
+                // Create Extra Accessories 
+                function(extraArray, next) {
+                    if (self.extraInputs) {
+                        async.forEachOf(extraArray, function(zone, key, step) {
+
+                            function pushMyExtraAccessories(step) {
+
+                                var extraAccessory = new EXTRAS_Accessory(self.log, zone, self.api)
+                                accessoriesArray.push(extraAccessory);
                                 step()
 
                             }
-                            pushMyAccessories(step)
+                            pushMyExtraAccessories(step)
                         }, function(err) {
                             if (err) next(err)
                             else next()
                         })
-
-                    },
-
-
-                    //Push Extra Inputs
-                    function(next) {
-                        function fetchExtras(next) {
-
-                            self.get.inputs()
-                                .then(response => {
-
-                                    var result = response.result[0];
-
-                                    var extraArray = []
-                                    var exobjArray = []
-
-                                    for (var i = 0; i < result.length; i++) {
-                                        if (result[i].title.match("AV") || result[i].icon.match("composite") || result[i].icon.match("wifidisplay")) {
-                                            exobjArray.push(result[i]);
-                                        }
-                                    }
-
-                                    exobjArray.forEach(function(element, index, array) {
-
-                                        var extraConfig = {
-                                            uri: element.uri,
-                                            extraname: element.title,
-                                            name: self.name,
-                                            psk: self.psk,
-                                            ipadress: self.ipadress,
-                                            mac: self.mac,
-                                            polling: self.polling,
-                                            interval: self.interval,
-                                            homeapp: self.homeapp
-                                        }
-
-                                        extraArray.push(extraConfig);
-
-                                    })
-                                    next(null, extraArray)
-                                })
-                                .catch(err => {
-                                    self.log("Could not retrieve Extra Source Inputs: " + err);
-                                    self.log("Fetching Extra Source Input failed - Trying again...");
-                                    setTimeout(function() {
-                                        fetchExtras(next)
-                                    }, 10000)
-                                });
-
-                        }
-                        fetchExtras(next)
-                    },
-
-                    // Create Extra Accessories 
-                    function(extraArray, next) {
-                        if (self.extraInputs) {
-                            async.forEachOf(extraArray, function(zone, key, step) {
-
-                                function pushMyExtraAccessories(step) {
-	                                
-                                    var extraAccessory = new EXTRAS_Accessory(self.log, zone, self.api)
-                                    accessoriesArray.push(extraAccessory);
-                                    step()
-
-                                }
-                                pushMyExtraAccessories(step)
-                            }, function(err) {
-                                if (err) next(err)
-                                else next()
-                            })
-                        } else {
-                            next();
-                        }
-                    },
-
-                    // set Home App Switch
-                    function(next) {
-                        var homeConfig = {
-                            uri: self.uri,
-                            name: self.name,
-                            psk: self.psk,
-                            ipadress: self.ipadress,
-                            mac: self.mac,
-                            polling: self.polling,
-                            interval: self.interval,
-                            homeapp: self.homeapp
-                        }
-                        var homeAccessory = new HOME_Accessory(self.log, homeConfig, self.api)
-                        accessoriesArray.push(homeAccessory);
-                        next();
-                    },
-
-                    // set Volume Control
-                    function(next) {
-                        var volConfig = {
-                            uri: self.uri,
-                            name: self.name,
-                            psk: self.psk,
-                            ipadress: self.ipadress,
-                            mac: self.mac,
-                            polling: self.polling,
-                            interval: self.interval,
-                            maxVolume: self.maxVolume
-                        }
-                        var volAccessory = new VOLUME_Accessory(self.log, volConfig, self.api)
-                        accessoriesArray.push(volAccessory);
+                    } else {
                         next();
                     }
+                },
 
-                ],
+                // set Home App Switch
+                function(next) {
+                    var homeConfig = {
+                        uri: self.uri,
+                        name: self.name,
+                        psk: self.psk,
+                        ipadress: self.ipadress,
+                        mac: self.mac,
+                        polling: self.polling,
+                        interval: self.interval,
+                        homeapp: self.homeapp
+                    }
+                    var homeAccessory = new HOME_Accessory(self.log, homeConfig, self.api)
+                    accessoriesArray.push(homeAccessory);
+                    next();
+                },
 
-                function(err, result) {
-                    if (err) callback(err)
-                    else callback(accessoriesArray);
+                // set Volume Control
+                function(next) {
+                    var volConfig = {
+                        uri: self.uri,
+                        name: self.name,
+                        psk: self.psk,
+                        ipadress: self.ipadress,
+                        mac: self.mac,
+                        polling: self.polling,
+                        interval: self.interval,
+                        maxVolume: self.maxVolume
+                    }
+                    var volAccessory = new VOLUME_Accessory(self.log, volConfig, self.api)
+                    accessoriesArray.push(volAccessory);
+                    next();
                 }
 
-            )
+            ],
 
-        }
+            function(err, result) {
+                if (err) callback(err)
+                else callback(accessoriesArray);
+            }
+
+        )
+
+    }
 }
