@@ -25,6 +25,10 @@ class VOLUME {
         this.maxVolume = config.maxVolume;
 
         HK_TYPES.registerWith(api);
+        
+        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
+            "token": process.argv[2]
+        });
     }
 
     getServices() {
@@ -58,10 +62,6 @@ class VOLUME {
             })
             .on('get', this.getVolume.bind(this))
             .on('set', this.setVolume.bind(this));
-
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
-            "token": process.argv[2]
-        });
 
         //SIMPLE POLLING
 
