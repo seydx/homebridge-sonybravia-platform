@@ -73,7 +73,7 @@ class SOURCES {
     }
 
     _getCurrentState(callback) {
-	    
+
         var self = this;
 
         self.get.contentinfo()
@@ -169,148 +169,148 @@ class SOURCES {
 
                     } else {
 
-			            // TURN ON
-			            if(self.mac){
-			
-			                var wol = require('wake_on_lan');
-			            
-			            	wol.wake(self.mac, function(error) {
-			            		if (error) {
-			            			self.log("Can't turn on the TV with the given MAC adress! Delete the MAC adress from config.json and try only with the IP adress!");
-			            			callback(null, false)
-			            		} else {
-			            			self.log("Magic packets send to " + self.mac + " - If TV stay off, please delete MAC from config.json!");
-			            			
-						            self.get.powerstate()
-						                .then(response => {
-						
-						                    var currentPower = response.result[0].status;
-						
-						                    if (currentPower == "active") {
-							                    
-						                        self._getCurrentState(function(err, state) {
-						
-						                            if (state.match(self.name)) {
-						                                self.log(self.name + " already on");
-						
-						                                callback(null, true)
-						
-						                            } else {
-						                                    
-							                            self.log("Connecting to " + self.name);
-							                            
-														function sleep (time) {
-														  return new Promise((resolve) => setTimeout(resolve, time));
-														}
-														
-														sleep(3000).then(() => {
-															
-															self.log("Connected!");
-						
-							                                // TV ON NOW - ACTIVATE SOURCE
-							                                self.get.setcontent()
-							                                    .then(response => {
-							
-							                                        self.log("Activate " + self.name);
-							                                        callback(null, true)
-							                                    })
-							                                    .catch(err => {
-							                                        self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
-							                                        callback(null, false)
-							                                    });
-															
-														});
-						
-						                            }
-						
-						                        })
-							                    
-							                } else {
-								                
-								                self.log("Could not turn on the TV!");
-								                callback(null, false)
-								                
-							                }
-							                
-							            })
-			                            .catch(err => {
-			                                self.log("Could not determine TV status: " + err);
-			                                callback(null, false)
-			                            });
-                            
-			            		}
-			            	});
-			            
-			            } else {
-			            
-			                self.get.poweron()
-			                .then(response => {
-			                    self.log("Turning on the TV");
-			                    
-				            self.get.powerstate()
-				                .then(response => {
-				
-				                    var currentPower = response.result[0].status;
-				
-				                    if (currentPower == "active") {
-					                    
-				                        self._getCurrentState(function(err, state) {
-				
-				                            if (state.match(self.name)) {
-				                                self.log(self.name + " already on");
-				
-				                                callback(null, true)
-				
-				                            } else {
-				                                    
-					                            self.log("Connecting to " + self.name);
-					                            
-												function sleep (time) {
-												  return new Promise((resolve) => setTimeout(resolve, time));
-												}
-												
-												sleep(3000).then(() => {
-													
-													self.log("Connected!");
-				
-					                                // TV ON NOW - ACTIVATE SOURCE
-					                                self.get.setcontent()
-					                                    .then(response => {
-					
-					                                        self.log("Activate " + self.name);
-					                                        callback(null, true)
-					                                    })
-					                                    .catch(err => {
-					                                        self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
-					                                        callback(null, false)
-					                                    });
-													
-												});
-				
-				                            }
-				
-				                        })
-					                    
-					                } else {
-						                
-						                self.log("Could not turn on the TV!");
-						                callback(null, false)
-						                
-					                }
-					                
-					            })
-	                            .catch(err => {
-	                                self.log("Could not determine TV status: " + err);
-	                                callback(null, false)
-	                            });
-			                    
-			                })
-			                .catch(err => {
-			                    self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
-			                    callback(null, false)
-			                });            
-			            
-			            }
+                        // TURN ON
+                        if (self.mac) {
+
+                            var wol = require('wake_on_lan');
+
+                            wol.wake(self.mac, function(error) {
+                                if (error) {
+                                    self.log("Can't turn on the TV with the given MAC adress! Delete the MAC adress from config.json and try only with the IP adress!");
+                                    callback(null, false)
+                                } else {
+                                    self.log("Magic packets send to " + self.mac + " - If TV stay off, please delete MAC from config.json!");
+
+                                    self.get.powerstate()
+                                        .then(response => {
+
+                                            var currentPower = response.result[0].status;
+
+                                            if (currentPower == "active") {
+
+                                                self._getCurrentState(function(err, state) {
+
+                                                    if (state.match(self.name)) {
+                                                        self.log(self.name + " already on");
+
+                                                        callback(null, true)
+
+                                                    } else {
+
+                                                        self.log("Connecting to " + self.name);
+
+                                                        function sleep(time) {
+                                                            return new Promise((resolve) => setTimeout(resolve, time));
+                                                        }
+
+                                                        sleep(5000).then(() => {
+
+                                                            self.log("Connected!");
+
+                                                            // TV ON NOW - ACTIVATE SOURCE
+                                                            self.get.setcontent()
+                                                                .then(response => {
+
+                                                                    self.log("Activate " + self.name);
+                                                                    callback(null, true)
+                                                                })
+                                                                .catch(err => {
+                                                                    self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                    callback(null, false)
+                                                                });
+
+                                                        });
+
+                                                    }
+
+                                                })
+
+                                            } else {
+
+                                                self.log("Could not turn on the TV!");
+                                                callback(null, false)
+
+                                            }
+
+                                        })
+                                        .catch(err => {
+                                            self.log("Could not determine TV status: " + err);
+                                            callback(null, false)
+                                        });
+
+                                }
+                            });
+
+                        } else {
+
+                            self.get.poweron()
+                                .then(response => {
+                                    self.log("Turning on the TV");
+
+                                    self.get.powerstate()
+                                        .then(response => {
+
+                                            var currentPower = response.result[0].status;
+
+                                            if (currentPower == "active") {
+
+                                                self._getCurrentState(function(err, state) {
+
+                                                    if (state.match(self.name)) {
+                                                        self.log(self.name + " already on");
+
+                                                        callback(null, true)
+
+                                                    } else {
+
+                                                        self.log("Connecting to " + self.name);
+
+                                                        function sleep(time) {
+                                                            return new Promise((resolve) => setTimeout(resolve, time));
+                                                        }
+
+                                                        sleep(5000).then(() => {
+
+                                                            self.log("Connected!");
+
+                                                            // TV ON NOW - ACTIVATE SOURCE
+                                                            self.get.setcontent()
+                                                                .then(response => {
+
+                                                                    self.log("Activate " + self.name);
+                                                                    callback(null, true)
+                                                                })
+                                                                .catch(err => {
+                                                                    self.log("Could not set Source on (status code %s): %s", response.statusCode, err);
+                                                                    callback(null, false)
+                                                                });
+
+                                                        });
+
+                                                    }
+
+                                                })
+
+                                            } else {
+
+                                                self.log("Could not turn on the TV!");
+                                                callback(null, false)
+
+                                            }
+
+                                        })
+                                        .catch(err => {
+                                            self.log("Could not determine TV status: " + err);
+                                            callback(null, false)
+                                        });
+
+                                })
+                                .catch(err => {
+                                    self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
+                                    callback(null, false)
+                                });
+
+                        }
 
                     }
                 })
