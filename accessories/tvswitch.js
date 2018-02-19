@@ -24,10 +24,6 @@ class TVSWITCH {
         this.uri = config.uri;
         this.homeapp = config.homeapp;
 
-        this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
-            "token": process.argv[2]
-        });
-
     }
 
     getServices() {
