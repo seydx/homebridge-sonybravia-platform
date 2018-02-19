@@ -23,6 +23,10 @@ class HOME_APP {
         this.interval = config.interval;
         this.uri = config.uri;
         this.homeapp = config.homeapp;
+        
+        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
+            "token": process.argv[2]
+        }, accessory.homeapp);
     }
 
     getServices() {
@@ -39,10 +43,6 @@ class HOME_APP {
         this.HomeSwitch.getCharacteristic(Characteristic.On)
             .on('get', this.getHomeSwitch.bind(this))
             .on('set', this.setHomeSwitch.bind(this));
-
-        this.get = new HK_REQS(accessory.psk, accessory.ipadress, accessory.uri, {
-            "token": process.argv[2]
-        }, accessory.homeapp);
 
         //SIMPLE POLLING
 
