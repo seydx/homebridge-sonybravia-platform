@@ -94,36 +94,36 @@ class TVSWITCH {
         if (state) {
 
             // TURN ON
-            if(self.mac){
+            if (self.mac) {
 
                 var wol = require('wake_on_lan');
-            
-            	wol.wake(self.mac, function(error) {
-            		if (error) {
-            			self.log("Can't turn on the TV with the given MAC adress! Delete the MAC adress from config.json and try only with the IP adress!");
-            			callback(null, false)
-            		} else {
-            			self.log("Magic packets send to " + self.mac + " - If TV stay off, please delete MAC from config.json!");
-                    	callback(null, true)
-            		}
-            	});
-            
+
+                wol.wake(self.mac, function(error) {
+                    if (error) {
+                        self.log("Can't turn on the TV with the given MAC adress! Delete the MAC adress from config.json and try only with the IP adress!");
+                        callback(null, false)
+                    } else {
+                        self.log("Magic packets send to " + self.mac + " - If TV stay off, please delete MAC from config.json!");
+                        callback(null, true)
+                    }
+                });
+
             } else {
-            
+
                 self.get.poweron()
-                .then(response => {
+                    .then(response => {
 
-                    self.log("Turning on the TV");
-                    callback(null, true)
+                        self.log("Turning on the TV");
+                        callback(null, true)
 
-                })
-                .catch(err => {
-                    self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
-                    callback(null, false)
-                });            
-            
+                    })
+                    .catch(err => {
+                        self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
+                        callback(null, false)
+                    });
+
             }
-            
+
         } else {
             // TURN OFF
             self.get.poweroff()
