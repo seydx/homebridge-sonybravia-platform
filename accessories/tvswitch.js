@@ -18,6 +18,7 @@ class TVSWITCH {
         this.name = config.name + " Power";
         this.psk = config.psk;
         this.ipadress = config.ipadress;
+        this.mac = config.mac;
         this.polling = config.polling;
         this.interval = config.interval;
         this.uri = config.uri;
@@ -74,13 +75,13 @@ class TVSWITCH {
                 } else if (currentPower == "standby") {
                     callback(null, false)
                 } else {
-                    self.log("Could not determine TV Status!")
+                    self.log("Could not determine TV status!")
                     callback(null, false)
                 }
 
             })
             .catch(err => {
-                self.log("Could not retrieve TV Status, error:" + err);
+                self.log("Could not retrieve TV status: " + err);
                 callback(null, false)
             });
 
@@ -91,8 +92,25 @@ class TVSWITCH {
         var self = this;
 
         if (state) {
+
             // TURN ON
-            self.get.poweron()
+            if(self.mac){
+
+                var wol = require('wake_on_lan');
+            
+            	wol.wake(self.mac, function(error) {
+            		if (error) {
+            			self.log("Can't turn on the TV with the given MAC adress! Delete the MAC adress from config.json and try only with the IP adress!");
+            			callback(null, false)
+            		} else {
+            			self.log("Magic packets send to " + self.mac + " - If TV stay off, please delete MAC from config.json!");
+                    	callback(null, true)
+            		}
+            	});
+            
+            } else {
+            
+                self.get.poweron()
                 .then(response => {
 
                     self.log("Turning on the TV");
@@ -100,9 +118,12 @@ class TVSWITCH {
 
                 })
                 .catch(err => {
-                    self.log("Cant set TV On (status code %s): %s", response.statusCode, err);
+                    self.log("Could not set TV on (status code %s): %s", response.statusCode, err);
                     callback(null, false)
-                });
+                });            
+            
+            }
+            
         } else {
             // TURN OFF
             self.get.poweroff()
@@ -113,7 +134,7 @@ class TVSWITCH {
 
                 })
                 .catch(err => {
-                    self.log("Cant set TV Off (status code %s): %s", response.statusCode, err);
+                    self.log("Could not set TV off (status code %s): %s", response.statusCode, err);
                     callback(null, false)
                 });
         }
