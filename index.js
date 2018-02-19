@@ -131,6 +131,7 @@ SonyBraviaPlatform.prototype = {
                                     var toConfig = {
                                         uri: element.uri,
                                         hdminame: element.title,
+                                        hdmiuri: element.uri,
                                         name: self.name,
                                         psk: self.psk,
                                         ipadress: self.ipadress,
