@@ -82,14 +82,14 @@ If you want to control your CEC devices too, do following steps (it is important
 
 3. You will get a list of source inputs, search for your "CEC" device like Apple TV. The "port" and "logaddr" (needed for config.json) is in the adress line, in the list defined as **"uri"**, so if your "uri" is **"extInput:cec?type=player&port=3&logicalAddr=4"** then your **port is 3** and **logaddr is 4**, the "label" (also needed for config.json) is in the list defined as "title"
 
-- See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/edit/master/config-example.json) for more details.
+- See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
 
 ## APPS
 
-This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possibpe to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
+This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possible to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
 ## WOL (Wake on LAN)
-If you have problems starting the TV with the IP adress, you can also try it with the MAC adress (WOL) - see example-config.json
+If you have problems starting the TV with the IP adress, you can also try it with the MAC adress (WOL) - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
 
 ## Options
 
@@ -112,7 +112,7 @@ If you have problems starting the TV with the IP adress, you can also try it wit
 
 ## Supported clients
 
-This platform and the switches it creates have been verified to work with the following apps on iOS 11:
+This platform and the switches it creates have been verified to work with the following apps on iOS 11.2.5:
 
 * Home (no App controlling)
 * Elgato Eve 
