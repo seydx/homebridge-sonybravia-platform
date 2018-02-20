@@ -35,7 +35,7 @@ class SOURCES {
             this.name = config.name + " " + this.cecname;
             this.hdmiuri = "extInput:hdmi?port=" + config.cecport;
         }
-        
+
         this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
             "token": process.argv[2]
         }, platform.homeapp, platform.cecuri, platform.hdmiuri);
@@ -82,8 +82,13 @@ class SOURCES {
 
             })
             .catch(err => {
-                self.log("Could not retrieve status from " + self.name + ": " + err);
-                callback(null, false)
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Sources: No connection - Trying to reconnect...");
+                    callback(null, false)
+                } else {
+                    self.log("Could not retrieve status from " + self.name + ": " + err)
+                    callback(null, false)
+                }
             });
 
     }
@@ -130,8 +135,13 @@ class SOURCES {
 
                     })
                     .catch(err => {
-                        self.log("Could not retrieve Source Status: " + err);
-                        callback(null, false)
+                        if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                            self.log("Sources: No connection - Trying to reconnect...");
+                            callback(null, false)
+                        } else {
+                            self.log("Could not retrieve Source Status: " + err)
+                            callback(null, false)
+                        }
                     });
 
             }
@@ -165,8 +175,13 @@ class SOURCES {
                                             callback(null, true)
                                         })
                                         .catch(err => {
-                                            self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
-                                            callback(null, false)
+                                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                self.log("Sources: No connection - Trying to reconnect...");
+                                                callback(null, false)
+                                            } else {
+                                                self.log("Could not set Source on: " + err)
+                                                callback(null, false)
+                                            }
                                         });
                                 } else {
                                     callback(null, true)
@@ -174,8 +189,13 @@ class SOURCES {
 
                             })
                             .catch(err => {
-                                self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
-                                callback(null, false)
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Sources: No connection - Trying to reconnect...");
+                                    callback(null, false)
+                                } else {
+                                    self.log("Could not set Source on: " + err)
+                                    callback(null, false)
+                                }
                             });
 
                     } else {
@@ -226,8 +246,13 @@ class SOURCES {
                                                                     callback(null, true)
                                                                 })
                                                                 .catch(err => {
-                                                                    self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
-                                                                    callback(null, false)
+                                                                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                                        self.log("Sources: No connection - Trying to reconnect...");
+                                                                        callback(null, false)
+                                                                    } else {
+                                                                        self.log("Could not set Source on: " + err)
+                                                                        callback(null, false)
+                                                                    }
                                                                 });
 
                                                         });
@@ -245,8 +270,13 @@ class SOURCES {
 
                                         })
                                         .catch(err => {
-                                            self.log("Could not determine TV status: " + err);
-                                            callback(null, false)
+                                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                self.log("Sources: No connection - Trying to reconnect...");
+                                                callback(null, false)
+                                            } else {
+                                                self.log("Could not determine TV status: " + err)
+                                                callback(null, false)
+                                            }
                                         });
 
                                 }
@@ -299,21 +329,31 @@ class SOURCES {
                                                                                 callback(null, true)
                                                                             })
                                                                             .catch(err => {
-                                                                                self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
-                                                                                callback(null, false)
+                                                                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                                                    self.log("Sources: No connection - Trying to reconnect...");
+                                                                                    callback(null, false)
+                                                                                } else {
+                                                                                    self.log("Could not set Source on: " + err)
+                                                                                    callback(null, false)
+                                                                                }
                                                                             });
 
                                                                     });
 
                                                                 } else {
-                                                                    callback(null, )
+                                                                    callback(null, true)
                                                                 }
 
 
                                                             })
                                                             .catch(err => {
-                                                                self.log("Could not set Source on (status code %s): %s", err.statusCode, err);
-                                                                callback(null, false)
+                                                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                                    self.log("Sources: No connection - Trying to reconnect...");
+                                                                    callback(null, false)
+                                                                } else {
+                                                                    self.log("Could not set Source on: " + err)
+                                                                    callback(null, false)
+                                                                }
                                                             });
 
                                                     }
@@ -329,14 +369,24 @@ class SOURCES {
 
                                         })
                                         .catch(err => {
-                                            self.log("Could not determine TV status: " + err);
-                                            callback(null, false)
+                                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                self.log("Sources: No connection - Trying to reconnect...");
+                                                callback(null, false)
+                                            } else {
+                                                self.log("Could not determine TV status: " + err)
+                                                callback(null, false)
+                                            }
                                         });
 
                                 })
                                 .catch(err => {
-                                    self.log("Could not set TV on (status code %s): %s", err.statusCode, err);
-                                    callback(null, false)
+                                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                        self.log("Sources: No connection - Trying to reconnect...");
+                                        callback(null, false)
+                                    } else {
+                                        self.log("Could not set TV on: " + err)
+                                        callback(null, false)
+                                    }
                                 });
 
                         }
@@ -344,8 +394,13 @@ class SOURCES {
                     }
                 })
                 .catch(err => {
-                    self.log("Could not get TV status (status code %s): %s", err.statusCode, err);
-                    callback(null, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Sources: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not get TV status: " + err)
+                        callback(null, false)
+                    }
                 });
 
         } else {
@@ -359,8 +414,13 @@ class SOURCES {
 
                 })
                 .catch(err => {
-                    self.log("Could not set Home App on (status code %s): %s", err.statusCode, err);
-                    callback(null, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Sources: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not set Home App on: " + err)
+                        callback(null, false)
+                    }
                 });
 
         }
