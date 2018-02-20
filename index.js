@@ -81,43 +81,30 @@ SonyBraviaPlatform.prototype = {
                 // set APP Service
                 function(next) {
 
-                    function fetchApps(next) {
-                        self.get.apps()
-                            .then(response => {
+                    self.get.apps()
+                        .then(response => {
 
-                                self.maxApps = response.result[0].length;
+                            self.maxApps = response.result[0].length;
 
-                                var appListConfig = {
-                                    name: self.name,
-                                    psk: self.psk,
-                                    ipadress: self.ipadress,
-                                    mac: self.mac,
-                                    polling: self.polling,
-                                    interval: self.interval,
-                                    maxApps: self.maxApps
-                                }
+                            var appListConfig = {
+                                name: self.name,
+                                psk: self.psk,
+                                ipadress: self.ipadress,
+                                mac: self.mac,
+                                polling: self.polling,
+                                interval: self.interval,
+                                maxApps: self.maxApps
+                            }
 
-                                var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
-                                accessoriesArray.push(appListAccessory);
+                            var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
+                            accessoriesArray.push(appListAccessory);
 
-                                next()
+                        })
+                        .catch(err => {
+                            self.log("Could not retrieve apps:" + err);
+                        });
 
-                            })
-                            .catch(err => {
-                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
-                                    self.log("Apps: No connection - Trying to reconnect...");
-                                    setTimeout(function() {
-                                        fetchApps(next)
-                                    }, 10000)
-                                } else {
-                                    self.log("Fetching Apps failed - Trying again...");
-                                    setTimeout(function() {
-                                        fetchApps(next)
-                                    }, 10000)
-                                }
-                            });
-                    }
-                    fetchApps(next)
+                    next();
                 },
 
                 //Push HDMI/CEC
