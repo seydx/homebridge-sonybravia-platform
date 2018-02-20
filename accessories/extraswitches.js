@@ -24,7 +24,7 @@ class EXTRAS {
         this.interval = config.interval;
         this.uri = config.uri;
         this.homeapp = config.homeapp;
-        
+
         this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
             "token": process.argv[2]
         }, platform.homeapp);
@@ -71,8 +71,13 @@ class EXTRAS {
 
             })
             .catch(err => {
-                self.log("Could not retrieve status from " + self.name + ": " + err);
-                callback(null, false)
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Extras: No connection - Trying to reconnect...");
+                    callback(null, false)
+                } else {
+                    self.log("Could not retrieve status from " + self.name + ", Error: " + err)
+                    callback(null, false)
+                }
             });
 
     }
@@ -109,8 +114,13 @@ class EXTRAS {
 
                     })
                     .catch(err => {
-                        self.log("Could not retrieve Extra Source Status: " + err);
-                        callback(null, false)
+                        if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                            self.log("Extras: No connection - Trying to reconnect...");
+                            callback(null, false)
+                        } else {
+                            self.log("Could not retrieve Extra Source Status: " + err)
+                            callback(null, false)
+                        }
                     });
 
             }
@@ -139,8 +149,13 @@ class EXTRAS {
                                 callback(null, true)
                             })
                             .catch(err => {
-                                self.log("Could not set Extra Source on (status code %s): %s", err.statusCode, err);
-                                callback(null, false)
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Extras: No connection - Trying to reconnect...");
+                                    callback(null, false)
+                                } else {
+                                    self.log("Could not set Extra Source on: " + err)
+                                    callback(null, false)
+                                }
                             });
 
                     } else {
@@ -186,13 +201,17 @@ class EXTRAS {
                                                             // TV ON NOW - ACTIVATE SOURCE
                                                             self.get.setcontent()
                                                                 .then(response => {
-
                                                                     self.log("Activate " + self.name);
                                                                     callback(null, true)
                                                                 })
                                                                 .catch(err => {
-                                                                    self.log("Could not set Extra Source on (status code %s): %s", err.statusCode, err);
-                                                                    callback(null, false)
+                                                                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                                        self.log("Extras: No connection - Trying to reconnect...");
+                                                                        callback(null, false)
+                                                                    } else {
+                                                                        self.log("Could not set Extra Source on: " + err)
+                                                                        callback(null, false)
+                                                                    }
                                                                 });
 
                                                         });
@@ -210,8 +229,13 @@ class EXTRAS {
 
                                         })
                                         .catch(err => {
-                                            self.log("Could not determine TV status: " + err);
-                                            callback(null, false)
+                                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                self.log("Extras: No connection - Trying to reconnect...");
+                                                callback(null, false)
+                                            } else {
+                                                self.log("Could not determine TV status: " + err)
+                                                callback(null, false)
+                                            }
                                         });
                                 }
                             });
@@ -256,8 +280,13 @@ class EXTRAS {
                                                                     callback(null, true)
                                                                 })
                                                                 .catch(err => {
-                                                                    self.log("Could not set Extra Source on (status code %s): %s", err.statusCode, err);
-                                                                    callback(null, false)
+                                                                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                                        self.log("Extras: No connection - Trying to reconnect...");
+                                                                        callback(null, false)
+                                                                    } else {
+                                                                        self.log("Could not set Extra Source on: " + err)
+                                                                        callback(null, false)
+                                                                    }
                                                                 });
 
                                                         });
@@ -275,14 +304,24 @@ class EXTRAS {
 
                                         })
                                         .catch(err => {
-                                            self.log("Could not determine TV status: " + err);
-                                            callback(null, false)
+                                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                                self.log("Extras: No connection - Trying to reconnect...");
+                                                callback(null, false)
+                                            } else {
+                                                self.log("Could not determine TV status: " + err)
+                                                callback(null, false)
+                                            }
                                         });
 
                                 })
                                 .catch(err => {
-                                    self.log("Could not set TV on (status code %s): %s", err.statusCode, err);
-                                    callback(null, false)
+                                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                        self.log("Extras: No connection - Trying to reconnect...");
+                                        callback(null, false)
+                                    } else {
+                                        self.log("Could not set TV on: " + err)
+                                        callback(null, false)
+                                    }
                                 });
 
                         }
@@ -290,8 +329,13 @@ class EXTRAS {
                     }
                 })
                 .catch(err => {
-                    self.log("Could not get TV status (status code %s): %s", err.statusCode, err);
-                    callback(null, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Extras: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not get TV status: " + err)
+                        callback(null, false)
+                    }
                 });
 
         } else {
@@ -305,8 +349,13 @@ class EXTRAS {
 
                 })
                 .catch(err => {
-                    self.log("Could not set Home App on (status code %s): %s", err.statusCode, err);
-                    callback(null, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Extras: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not set Home App on: " + err)
+                        callback(null, false)
+                    }
                 });
 
         }
