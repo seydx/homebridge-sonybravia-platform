@@ -25,7 +25,7 @@ class VOLUME {
         this.maxVolume = config.maxVolume;
 
         HK_TYPES.registerWith(api);
-        
+
         this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
             "token": process.argv[2]
         });
@@ -109,8 +109,13 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            self.log("Could not retrieve mute state: " + err);
-                            callback(false, false)
+                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                self.log("Volume: No connection - Trying to reconnect...");
+                                callback(null, false)
+                            } else {
+                                self.log("Could not retrieve mute state: " + err)
+                                callback(null, false)
+                            }
                         });
 
                 } else {
@@ -120,8 +125,13 @@ class VOLUME {
 
             })
             .catch(err => {
-                self.log("Could not get TV status: " + err);
-                callback(false, false)
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Volume: No connection - Trying to reconnect...");
+                    callback(null, false)
+                } else {
+                    self.log("Could not get TV status: " + err)
+                    callback(null, false)
+                }
             });
 
     }
@@ -158,8 +168,13 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            self.log("Could not retrieve volume state: " + err);
-                            callback(false, 0)
+                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                self.log("Volume: No connection - Trying to reconnect...");
+                                callback(null, 0)
+                            } else {
+                                self.log("Could not retrieve volume state: " + err)
+                                callback(null, 0)
+                            }
                         });
 
                 } else {
@@ -169,8 +184,13 @@ class VOLUME {
 
             })
             .catch(err => {
-                self.log("Could not get TV status: " + err);
-                callback(false, 0)
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Volume: No connection - Trying to reconnect...");
+                    callback(null, 0)
+                } else {
+                    self.log("Could not get TV status: " + err)
+                    callback(null, 0)
+                }
             });
     }
 
@@ -194,8 +214,13 @@ class VOLUME {
                                 callback(false, true)
                             })
                             .catch(err => {
-                                self.log("Could not get Volume status: " + err);
-                                callback(false, false)
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Volume: No connection - Trying to reconnect...");
+                                    callback(null, false)
+                                } else {
+                                    self.log("Could not get Volume status: " + err)
+                                    callback(null, false)
+                                }
                             });
 
                     } else {
@@ -207,8 +232,13 @@ class VOLUME {
 
                 })
                 .catch(err => {
-                    self.log("Could not get TV status: " + err);
-                    callback(false, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Volume: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not get TV status: " + err)
+                        callback(null, false)
+                    }
                 });
 
         } else {
@@ -228,8 +258,13 @@ class VOLUME {
 
                             })
                             .catch(err => {
-                                self.log("Could not disable Volume: " + err);
-                                callback(false, false)
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Volume: No connection - Trying to reconnect...");
+                                    callback(null, false)
+                                } else {
+                                    self.log("Could not disable Volume: " + err)
+                                    callback(null, false)
+                                }
                             });
 
                     } else {
@@ -241,8 +276,13 @@ class VOLUME {
 
                 })
                 .catch(err => {
-                    self.log("Could not get TV status: " + err);
-                    callback(false, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Volume: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not get TV status: " + err)
+                        callback(null, false)
+                    }
                 });
 
         }
@@ -306,8 +346,13 @@ class VOLUME {
 
                         })
                         .catch(err => {
-                            self.log("Could not set volume: " + err)
-                            callback()
+                            if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                self.log("Volume: No connection - Trying to reconnect...");
+                                callback()
+                            } else {
+                                self.log("Could not set Volume: " + err)
+                                callback()
+                            }
                         });
 
                 } else {
@@ -318,8 +363,13 @@ class VOLUME {
 
             })
             .catch(err => {
-                self.log("Could not get TV status: " + err);
-                callback()
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Volume: No connection - Trying to reconnect...");
+                    callback()
+                } else {
+                    self.log("Could not get TV status: " + err)
+                    callback()
+                }
             });
     }
 }
