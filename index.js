@@ -42,7 +42,7 @@ function SonyBraviaPlatform(log, config, api) {
     }
     this.maxVolume = config["maxVolume"] || 30;
     this.extraInputs = config["extraInputs"] === true;
-    this.cecs = config["cecs"] || [""];
+    this.cecs = config["cecs"] || [];
     this.maxApps = "";
 
     HK_TYPES.registerWith(api);
@@ -81,30 +81,43 @@ SonyBraviaPlatform.prototype = {
                 // set APP Service
                 function(next) {
 
-                    self.get.apps()
-                        .then(response => {
+                    function fetchApps(next) {
+                        self.get.apps()
+                            .then(response => {
 
-                            self.maxApps = response.result[0].length;
+                                self.maxApps = response.result[0].length;
 
-                            var appListConfig = {
-                                name: self.name,
-                                psk: self.psk,
-                                ipadress: self.ipadress,
-                                mac: self.mac,
-                                polling: self.polling,
-                                interval: self.interval,
-                                maxApps: self.maxApps
-                            }
+                                var appListConfig = {
+                                    name: self.name,
+                                    psk: self.psk,
+                                    ipadress: self.ipadress,
+                                    mac: self.mac,
+                                    polling: self.polling,
+                                    interval: self.interval,
+                                    maxApps: self.maxApps
+                                }
 
-                            var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
-                            accessoriesArray.push(appListAccessory);
+                                var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
+                                accessoriesArray.push(appListAccessory);
 
-                        })
-                        .catch(err => {
-                            self.log("Could not retrieve apps:" + err);
-                        });
+                                next()
 
-                    next();
+                            })
+                            .catch(err => {
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Apps: No connection - Trying to reconnect...");
+                                    setTimeout(function() {
+                                        fetchApps(next)
+                                    }, 10000)
+                                } else {
+                                    self.log("Fetching Apps failed - Trying again...");
+                                    setTimeout(function() {
+                                        fetchApps(next)
+                                    }, 10000)
+                                }
+                            });
+                    }
+                    fetchApps(next)
                 },
 
                 //Push HDMI/CEC
@@ -163,11 +176,17 @@ SonyBraviaPlatform.prototype = {
                                 next(null, hdmiArray)
                             })
                             .catch(err => {
-                                self.log("Could not retrieve Source Inputs: " + err);
-                                self.log("Fetching Source Input failed - Trying again...");
-                                setTimeout(function() {
-                                    fetchSources(next)
-                                }, 10000)
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Sources: No connection - Trying to reconnect...");
+                                    setTimeout(function() {
+                                        fetchSources(next)
+                                    }, 10000)
+                                } else {
+                                    self.log("Fetching Source Input failed - Trying again...");
+                                    setTimeout(function() {
+                                        fetchSources(next)
+                                    }, 10000)
+                                }
                             });
 
                     }
@@ -233,11 +252,17 @@ SonyBraviaPlatform.prototype = {
                                 next(null, extraArray)
                             })
                             .catch(err => {
-                                self.log("Could not retrieve Extra Source Inputs: " + err);
-                                self.log("Fetching Extra Source Input failed - Trying again...");
-                                setTimeout(function() {
-                                    fetchExtras(next)
-                                }, 10000)
+                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                                    self.log("Extras: No connection - Trying to reconnect...");
+                                    setTimeout(function() {
+                                        fetchExtras(next)
+                                    }, 10000)
+                                } else {
+                                    self.log("Fetching Extra Source Input failed - Trying again...");
+                                    setTimeout(function() {
+                                        fetchExtras(next)
+                                    }, 10000)
+                                }
                             });
 
                     }
