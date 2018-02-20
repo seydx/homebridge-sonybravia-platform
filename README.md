@@ -63,6 +63,10 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 }
 ```
 
+### Multiple TVs
+
+If you want to control multiple TVs , just add a second platform (see above), change the IP and PSK **and** give the platform an own unique "name".
+
 ### Home APP
 
 Home App is an on the TV installed app that must be defined in the config.json file. Due to the reason that its not possible to **deactivate** a HDMI input, this App will start instead. So if you switch off HDMI, the input will change from HDMI to the Home App (_in my case it is an IPTV app_)
@@ -91,6 +95,7 @@ If you want to control your CEC devices too, do following steps (it is important
 This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possible to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
 ## WOL (Wake on LAN)
+
 If you have problems starting the TV with the IP adress, you can also try it with the MAC adress (WOL) - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
 
 ## Options
