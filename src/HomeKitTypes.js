@@ -11,6 +11,7 @@ module.exports = {
             Service.call(this, displayName, "1d837d23-84f7-424a-91b9-0b1fe288e1d2", subtype);
         };
         inherits(Service.AppService, Service);
+        Service.AppService.UUID = "1d837d23-84f7-424a-91b9-0b1fe288e1d2";
 
         Characteristic.TargetApp = function() {
             Characteristic.call(this, "Target App Nr", "613f5692-4713-4743-85ca-627e8f17d3bf");
@@ -25,6 +26,7 @@ module.exports = {
             this.value = this.getDefaultValue();
         };
         inherits(Characteristic.TargetApp, Characteristic);
+        Characteristic.TargetApp.UUID = "613f5692-4713-4743-85ca-627e8f17d3bf";
 
         Characteristic.TargetName = function() {
             Characteristic.call(this, "Target App Name", "e2454387-a3e9-44a9-82f2-852f9628ecbc");
@@ -35,6 +37,7 @@ module.exports = {
             this.value = this.getDefaultValue();
         };
         inherits(Characteristic.TargetName, Characteristic);
+        Characteristic.TargetName.UUID = "e2454387-a3e9-44a9-82f2-852f9628ecbc";
 
     }
 }
