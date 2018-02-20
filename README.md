@@ -49,11 +49,13 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   [
    {
     "label":"Apple TV",
-    "logaddr":8,"port":2
+    "logaddr":8,
+    "port":2
    },
    {
     "label":"PlayStation 4",
-    "logaddr":4,"port":3
+    "logaddr":4,
+    "port":3
    }
   ]
  }
