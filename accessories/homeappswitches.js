@@ -23,7 +23,7 @@ class HOME_APP {
         this.interval = config.interval;
         this.uri = config.uri;
         this.homeapp = config.homeapp;
-        
+
         this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
             "token": process.argv[2]
         }, platform.homeapp);
@@ -68,8 +68,13 @@ class HOME_APP {
                 callback(null, state);
             })
             .catch(err => {
-                self.log("Could not retrieve status from " + self.name + ": " + err);
-                callback(null, false)
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Home: No connection - Trying to reconnect...");
+                    callback(null, false)
+                } else {
+                    self.log("Could not retrieve status from " + self.name + ": " + err)
+                    callback(null, false)
+                }
             });
 
     }
@@ -104,8 +109,13 @@ class HOME_APP {
 
                     })
                     .catch(err => {
-                        self.log("Could not retrieve TV status: " + err);
-                        callback(null, false)
+                        if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                            self.log("Home: No connection - Trying to reconnect...");
+                            callback(null, false)
+                        } else {
+                            self.log("Could not retrieve TV status: " + err)
+                            callback(null, false)
+                        }
                     });
 
             }
@@ -125,8 +135,13 @@ class HOME_APP {
                     callback(null, true)
                 })
                 .catch(err => {
-                    self.log("Could not set " + self.name + " on: " + err);
-                    callback(null, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Home: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not set " + self.name + " on: " + err)
+                        callback(null, false)
+                    }
                 });
 
         } else {
@@ -137,8 +152,13 @@ class HOME_APP {
                     callback(null, false)
                 })
                 .catch(err => {
-                    self.log("Could not turn off " + self.name + " on: " + err);
-                    callback(null, false)
+                    if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                        self.log("Home: No connection - Trying to reconnect...");
+                        callback(null, false)
+                    } else {
+                        self.log("Could not set " + self.name + " off: " + err)
+                        callback(null, false)
+                    }
                 });
 
         }
