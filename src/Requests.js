@@ -2,13 +2,14 @@ var rp = require("request-promise");
 
 class HDMI_REQ {
 
-    constructor(psk, ipadress, uri, params, homeapp, cecuri) {
+    constructor(psk, ipadress, uri, params, homeapp, cecuri, hdmiuri) {
         this.psk = psk;
         this.ipadress = ipadress;
         this.uri = uri;
         this.params = params;
         this.homeapp = homeapp;
         this.cecuri = cecuri;
+        this.hdmiuri = hdmiuri;
     }
 
     inputs() {
@@ -230,6 +231,41 @@ class HDMI_REQ {
                         "method": "setPlayContent",
                         "params": [{
                             "uri": self.uri
+                        }],
+                        "id": 1,
+                        "version": "1.0"
+                    },
+                    "headers": {
+                        "X-Auth-PSK": self.psk
+                    },
+                    "json": true
+
+                });
+            }
+        }
+
+        self.sony.token = self.params.token;
+        return self.sony.get();
+
+    }
+
+    sethdmi() {
+
+        var self = this;
+
+        this.sony = {
+
+            token: null,
+
+            get: function() {
+                return rp({
+
+                    "method": "POST",
+                    "uri": "http://" + self.ipadress + "/sony/avContent",
+                    "body": {
+                        "method": "setPlayContent",
+                        "params": [{
+                            "uri": self.hdmiuri
                         }],
                         "id": 1,
                         "version": "1.0"
