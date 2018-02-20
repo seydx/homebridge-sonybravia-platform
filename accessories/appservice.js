@@ -25,7 +25,7 @@ class APP_ACCESSORY {
         this.maxApps = config.maxApps;
 
         HK_TYPES.registerWith(api);
-        
+
         this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
             "token": process.argv[2]
         }, platform.homeapp);
@@ -86,7 +86,11 @@ class APP_ACCESSORY {
 
             })
             .catch(err => {
-                accessory.log("Could not retrieve app list: " + err)
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    accessory.log("Apps: No connection - Trying to reconnect...");
+                } else {
+                    accessory.log("Could not retrieve app list, Error: " + err)
+                }
             });
 
         return [this.informationService, this.AppService];
@@ -131,8 +135,13 @@ class APP_ACCESSORY {
 
             })
             .catch(err => {
-                self.log("Could not retrieve app name: " + err)
-                callback(false, "ERROR")
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Apps: No connection - Trying to reconnect...");
+                    callback(false, "CONNECTION ISSUES")
+                } else {
+                    self.log("Could not retrieve app name - Trying again... Error: " + err)
+                    callback(false, "ERROR")
+                }
             });
 
 
@@ -204,15 +213,25 @@ class APP_ACCESSORY {
 
                     })
                     .catch(err => {
-                        self.log("Could not set " + self.appName + ": " + err)
-                        callback()
+                        if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                            self.log("Apps: No connection - Trying to reconnect...");
+                            callback()
+                        } else {
+                            self.log("Could not set Home App - Trying again... Error: " + err)
+                            callback()
+                        }
                     });
 
 
             })
             .catch(err => {
-                self.log("Could not retrieve apps: " + err)
-                callback()
+                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
+                    self.log("Apps: No connection - Trying to reconnect...");
+                    callback()
+                } else {
+                    self.log("Could not retrieve apps - Trying again... Error: " + err)
+                    callback()
+                }
             });
     }
 
