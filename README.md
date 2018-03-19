@@ -1,3 +1,9 @@
+# homebridge-sonybravia-platform v2.0
+
+[![npm](https://img.shields.io/npm/v/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
+[![npm](https://img.shields.io/npm/dt/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
+[![GitHub last commit](https://img.shields.io/github/last-commit/SeydX/homebridge-sonybravia-platform.svg?style=flat-square)](https://github.com/SeydX/homebridge-sonybravia-platform)
+
 # Homebridge Platform Plugin for Sony Bravia Android TV
 
 This is a Plugin for [Homebridge](https://github.com/nfarina/homebridge) to control your **Sony Android TV**. This plugin expose a Power Switch, HDMI Inputs with CEC functionality (if adjusted in config), a Service for your installed apps on the TV and a Bulb to controll the volume.
