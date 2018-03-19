@@ -1,12 +1,12 @@
 var http = require("http"),
     async = require("async");
 
-var TV_Accessory = require('./accessories/TV.js');
-var VOLUME_Accessory = require('./accessories/Volume.js');
-var APP_Accessory = require('./accessories/Apps.js');
-var SOURCE_Accessory = require('./accessories/Inputs.js');
-var EXTRAS_Accessory = require('./accessories/Extras.js');
-var HOME_Accessory = require('./accessories/Home.js');
+var TV_Accessory = require('./accessories/TV.js'),
+    VOLUME_Accessory = require('./accessories/Volume.js'),
+    APP_Accessory = require('./accessories/Apps.js'),
+    SOURCE_Accessory = require('./accessories/Inputs.js'),
+    EXTRAS_Accessory = require('./accessories/Extras.js'),
+    HOME_Accessory = require('./accessories/Home.js');
 
 var Accessory,
     Service,
