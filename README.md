@@ -40,10 +40,9 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "name":"Sony Bravia",
   "ipadress":"192.168.1.1",
   "psk":"YourPSK",
-  "polling":true,
   "interval": 5,
   "maxVolume":30,
-  "extraInputs":true,
+  "extraInputs":false,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":
   [
@@ -94,19 +93,13 @@ If you want to control your CEC devices too, do following steps (it is important
 
 This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possible to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
-## WOL (Wake on LAN)
-
-If you have problems starting the TV with the IP adress, you can also try it with the MAC adress (WOL) - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
-
 ## Options
 
 | **Attributes** | **Required** | **Usage** |
 |------------|----------|-------|
 | name | **Yes** | **Unique Name** for the Platform.   |
 | ipadress | **Yes** | IP adress from your Sony Bravia TV |
-| mac | No | MAC adress from the TV for Wake On Lan |
 | psk | **Yes** | Your Pre Shared Key |
-| polling | No | Checking states of TV and Sources (Default: true) |
 | interval | No | Polling Interval in seconds (Default: 2s) |
 | extraInputs | No | Expose extra sources like AV, display mirroring etc. (Default: true) |
 | homeapp | **Yes** | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
@@ -147,31 +140,3 @@ You can contribute to this homebridge plugin in following ways:
 - Contribute changes to extend the capabilities
 
 Pull requests are accepted.
-
-
-## Credits
-
-Thanks to @grover for this beatiful ReadMe template
-
-
-## MIT License
-
-Copyright (c) 2017 SeydX
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
