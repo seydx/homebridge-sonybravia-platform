@@ -4,6 +4,7 @@
 [![npm](https://img.shields.io/npm/dt/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
 [![GitHub last commit](https://img.shields.io/github/last-commit/SeydX/homebridge-sonybravia-platform.svg?style=flat-square)](https://github.com/SeydX/homebridge-sonybravia-platform)
 
+
 # Homebridge Platform Plugin for Sony Bravia Android TV
 
 This is a Plugin for [Homebridge](https://github.com/nfarina/homebridge) to control your **Sony Android TV**. This plugin expose a Power Switch, HDMI Inputs with CEC functionality (if adjusted in config), a Service for your installed apps on the TV and a Bulb to controll the volume.
@@ -29,6 +30,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 - Set "Remote start" to ON in your Android TV Settings -> Network -> Remote Start
 - Change "Authentication" to "Normal and Pre-Shared Key" in your Android Settings -> Network -> IP Control -> Authentication
 - Enter a "Pre-Shared Key" in your Android TV Settings -> Network -> IP control -> Pre-Shared Key
+ 
  
 ## Example config.json:
 
@@ -68,9 +70,11 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 }
 ```
 
+
 ### Multiple TVs
 
 If you want to control multiple TVs , just add a second platform (see above), change the IP and PSK **and** give the platform an own unique "name".
+
 
 ### Home APP
 
@@ -95,9 +99,11 @@ If you want to control your CEC devices too, do following steps (it is important
 
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
 
+
 ## APPS
 
 This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possible to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
+
 
 ## Options
 
@@ -128,12 +134,11 @@ This platform and the switches it creates have been verified to work with the fo
 
 - ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
 
-- ~~TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring~~
-- ~~TODO: Bulb for volume up/down~~
-- ~~TODO: Service to switch between apps~~
-- TODO: Service to switch between Channels
-- ~~TODO: Support Wake on Lan~~
-- ~~TODO: Better error handling~~
+[x] TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
+[x] TODO: Bulb for volume up/down
+[x] TODO: Service to switch between apps
+[x] TODO: Better error handling
+[ ] TODO: Service to switch between Channels
 
 
 ## Contributing
