@@ -1,16 +1,16 @@
-var rp = require("request-promise"),
+var http = require("http"),
     async = require("async");
 
-var HK_TYPES = require("./src/HomeKitTypes.js");
-var HK_REQS = require('./src/Requests.js');
-var TV_Accessory = require('./accessories/tvswitch.js');
-var VOLUME_Accessory = require('./accessories/volumeaccesory.js');
-var APP_Accessory = require('./accessories/appservice.js');
-var SOURCE_Accessory = require('./accessories/sourceswitches.js');
-var EXTRAS_Accessory = require('./accessories/extraswitches.js');
-var HOME_Accessory = require('./accessories/homeappswitches.js');
+var TV_Accessory = require('./accessories/TV.js');
+var VOLUME_Accessory = require('./accessories/Volume.js');
+var APP_Accessory = require('./accessories/Apps.js');
+var SOURCE_Accessory = require('./accessories/Inputs.js');
+var EXTRAS_Accessory = require('./accessories/Extras.js');
+var HOME_Accessory = require('./accessories/Home.js');
 
-var Accessory, Service, Characteristic;
+var Accessory,
+    Service,
+    Characteristic;
 
 module.exports = function(homebridge) {
 
@@ -31,25 +31,66 @@ function SonyBraviaPlatform(log, config, api) {
     this.log = log;
     this.name = config["name"] || "Sony";
     this.psk = config["psk"];
+    if (!this.psk) throw new Error("PSK is required!");
     this.ipadress = config["ipadress"];
-    this.mac = config["mac"] || "";
-    this.polling = config["polling"] === true;
-    this.interval = (config['interval'] * 1000) || 5000;
+    if (!this.ipadress) throw new Error("IP Adress is required!");
+    this.interval = (config['interval'] * 1000) || 10000;
+    if (this.interval < 5) {
+        platform.log("Interval to low! Setting interval to 5 seconds");
+        this.interval = 5;
+    }
     this.homeapp = config["homeapp"];
-    if (this.polling == undefined || this.polling == "" || this.polling == null) {
+    if (this.homeapp == undefined || this.homeapp == "" || this.homeapp == null) {
         platform.log("No Home App defined, setting Home App to YouTube!");
         this.homeapp = "com.sony.dtv.com.google.android.youtube.tv.com.google.android.apps.youtube.tv.cobalt.activity.ShellActivity";
     }
     this.maxVolume = config["maxVolume"] || 30;
-    this.extraInputs = config["extraInputs"] === true;
+    this.extraInputs = config["extraInputs"] || false;
     this.cecs = config["cecs"] || [];
-    this.maxApps = "";
 
-    HK_TYPES.registerWith(api);
+    this.getContent = function(setPath, setMethod, setParams, setVersion) {
 
-    this.get = new HK_REQS(platform.psk, platform.ipadress, platform.uri, {
-        "token": process.argv[2]
-    });
+        return new Promise((resolve, reject) => {
+
+            var options = {
+                host: platform.ipadress,
+                port: 80,
+                family: 4,
+                path: setPath,
+                method: 'POST',
+                headers: {
+                    'X-Auth-PSK': platform.psk
+                }
+            };
+
+            var post_data = {
+                "method": setMethod,
+                "params": [setParams],
+                "id": 1,
+                "version": setVersion
+            };
+
+            var req = http.request(options, function(res) {
+
+                if (res.statusCode < 200 || res.statusCode > 299) {
+                    reject(new Error('Failed to load data, status code: ' + res.statusCode));
+                }
+
+                const body = []
+                res.on('data', (chunk) => body.push(chunk));
+                res.on('end', () => resolve(body.join('')));
+
+            });
+
+            req.on('error', (err) => reject(err))
+
+            req.write(JSON.stringify(post_data));
+            req.end();
+
+        })
+
+    };
+
 }
 
 SonyBraviaPlatform.prototype = {
@@ -81,10 +122,11 @@ SonyBraviaPlatform.prototype = {
                 // set APP Service
                 function(next) {
 
-                    self.get.apps()
-                        .then(response => {
+                    self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+                        .then((data) => {
 
-                            self.maxApps = response.result[0].length;
+                            var response = JSON.parse(data);
+                            var AppList = response.result[0].length;
 
                             var appListConfig = {
                                 name: self.name,
@@ -93,18 +135,19 @@ SonyBraviaPlatform.prototype = {
                                 mac: self.mac,
                                 polling: self.polling,
                                 interval: self.interval,
-                                maxApps: self.maxApps
+                                maxApps: AppList
                             }
 
                             var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
                             accessoriesArray.push(appListAccessory);
 
                         })
-                        .catch(err => {
-                            self.log("Could not retrieve apps:" + err);
+                        .catch((err) => {
+                            self.log(self.name + ": " + err + " - Trying again");
                         });
 
                     next();
+
                 },
 
                 //Push HDMI/CEC
@@ -112,9 +155,10 @@ SonyBraviaPlatform.prototype = {
 
                     function fetchSources(next) {
 
-                        self.get.inputs()
-                            .then(response => {
+                        self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                            .then((data) => {
 
+                                var response = JSON.parse(data);
                                 var result = response.result[0];
 
                                 var hdmiArray = []
@@ -161,19 +205,13 @@ SonyBraviaPlatform.prototype = {
                                 })
 
                                 next(null, hdmiArray)
+
                             })
-                            .catch(err => {
-                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
-                                    self.log("Sources: No connection - Trying to reconnect...");
-                                    setTimeout(function() {
-                                        fetchSources(next)
-                                    }, 10000)
-                                } else {
-                                    self.log("Fetching Source Input failed - Trying again...");
-                                    setTimeout(function() {
-                                        fetchSources(next)
-                                    }, 10000)
-                                }
+                            .catch((err) => {
+                                self.log(self.name + ": " + err + " - Trying again");
+                                setTimeout(function() {
+                                    fetchSources(next);
+                                }, 10000)
                             });
 
                     }
@@ -205,9 +243,10 @@ SonyBraviaPlatform.prototype = {
                 function(next) {
                     function fetchExtras(next) {
 
-                        self.get.inputs()
-                            .then(response => {
+                        self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                            .then((data) => {
 
+                                var response = JSON.parse(data);
                                 var result = response.result[0];
 
                                 var extraArray = []
@@ -237,19 +276,13 @@ SonyBraviaPlatform.prototype = {
 
                                 })
                                 next(null, extraArray)
+
                             })
-                            .catch(err => {
-                                if (err.message.match("ETIMEDOUT") || err.message.match("EHOSTUNREACH")) {
-                                    self.log("Extras: No connection - Trying to reconnect...");
-                                    setTimeout(function() {
-                                        fetchExtras(next)
-                                    }, 10000)
-                                } else {
-                                    self.log("Fetching Extra Source Input failed - Trying again...");
-                                    setTimeout(function() {
-                                        fetchExtras(next)
-                                    }, 10000)
-                                }
+                            .catch((err) => {
+                                self.log(self.name + ": " + err + " - Trying again");
+                                setTimeout(function() {
+                                    fetchExtras(next);
+                                }, 10000)
                             });
 
                     }
