@@ -10,16 +10,22 @@
   "platform":"SonyBravia",
   "name":"Sony Bravia",
   "ipadress":"192.168.1.1",
-  "mac":"01:02:03:04:05:06", //PUT MAC ADRESS ONLY IF YOU HAVE PROBLEMS WITH THE IP ADRESS
   "psk":"YourPSK",
-  "polling":true,
   "interval": 5,
-  "volumeControl":true,
   "maxVolume":30,
   "extraInputs":false,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
-  "cecs":[{"label":"Apple TV","logaddr":8,"port":2},
-          {"label":"PlayStation 4","logaddr":4,"port":3}
+  "cecs":[
+   {
+    "label":"Apple TV",
+    "logaddr":8,
+    "port":2
+   },
+   {
+    "label":"PlayStation 4",
+    "logaddr":4,
+    "port":3
+   }
   ]
  }
  ]
