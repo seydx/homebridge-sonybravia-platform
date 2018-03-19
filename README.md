@@ -134,11 +134,11 @@ This platform and the switches it creates have been verified to work with the fo
 
 - ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
 
-[x] TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
-[x] TODO: Bulb for volume up/down
-[x] TODO: Service to switch between apps
-[x] TODO: Better error handling
-[ ] TODO: Service to switch between Channels
+- [x] TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
+- [x] TODO: Bulb for volume up/down
+- [x] TODO: Service to switch between apps
+- [x] TODO: Better error handling
+- [ ] TODO: Service to switch between Channels
 
 
 ## Contributing
