@@ -19,6 +19,7 @@ class VOLUME {
         this.psk = config.psk;
         this.ipadress = config.ipadress;
         this.interval = config.interval;
+        this.maxVolume = config.maxVolume;
 
         !this.state ? this.state = false : this.state;
         !this.volume ? this.volume = 0 : this.volume;
@@ -57,7 +58,7 @@ class VOLUME {
 
                 });
 
-                req.on('error', (err) => reject(err))
+                req.on('error', (err) => reject(err));
 
                 req.write(JSON.stringify(post_data));
                 req.end();
@@ -88,7 +89,7 @@ class VOLUME {
 
         this.VolumeBulb.addCharacteristic(new Characteristic.Brightness())
             .setProps({
-                maxValue: 30,
+                maxValue: self.maxVolume,
                 minValue: 0,
                 minStep: 1
             })
@@ -142,7 +143,7 @@ class VOLUME {
                 self.VolumeBulb.getCharacteristic(Characteristic.Brightness).updateValue(self.volume);
                 setTimeout(function() {
                     self.getStates();
-                }, 30000)
+                }, 60000)
             });
 
     }
@@ -174,6 +175,7 @@ class VOLUME {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = false;
                     self.VolumeBulb.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
@@ -201,6 +203,7 @@ class VOLUME {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = true;
                     self.VolumeBulb.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
