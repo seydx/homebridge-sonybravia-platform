@@ -125,7 +125,7 @@ class EXTRAS {
                 self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                 setTimeout(function() {
                     self.getStates();
-                }, 30000)
+                }, 60000)
             });
 
     }
@@ -150,11 +150,13 @@ class EXTRAS {
                             .then((data) => {
 
                                 self.log("Turning on the TV...");
-                                this.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(true);
+                                self.state = true;
+                                this.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
 
                             })
                             .catch((err) => {
                                 self.log(self.name + ": " + err);
+                                self.state = false;
                                 self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                                 callback(null, self.state)
                             });
@@ -170,6 +172,7 @@ class EXTRAS {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = false;
                     self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
@@ -180,8 +183,8 @@ class EXTRAS {
                     "uri": self.homeapp
                 }, "1.0")
                 .then((data) => {
-	                
-	                var response = JSON.parse(data);
+
+                    var response = JSON.parse(data);
 
                     if ("error" in response) {
                         self.log("TV OFF");
@@ -197,6 +200,7 @@ class EXTRAS {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = true;
                     self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
