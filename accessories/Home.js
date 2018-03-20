@@ -122,7 +122,7 @@ class HOME_APP {
                 self.HomeSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                 setTimeout(function() {
                     self.getStates();
-                }, 30000)
+                }, 60000)
             });
 
     }
@@ -137,8 +137,8 @@ class HOME_APP {
                     "uri": self.homeapp
                 }, "1.0")
                 .then((data) => {
-	                
-	                var response = JSON.parse(data);
+
+                    var response = JSON.parse(data);
 
                     self.log("Turn ON: " + self.name);
                     self.state = true;
@@ -148,6 +148,7 @@ class HOME_APP {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = false;
                     self.HomeSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
@@ -156,8 +157,8 @@ class HOME_APP {
 
             self.getContent("/sony/appControl", "terminateApps", "1.0", "1.0")
                 .then((data) => {
-	                
-	                var response = JSON.parse(data);
+
+                    var response = JSON.parse(data);
 
                     self.log("Turn OFF: " + self.name);
                     self.state = false;
@@ -167,6 +168,7 @@ class HOME_APP {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = true;
                     self.HomeSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
