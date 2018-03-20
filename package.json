@@ -1,6 +1,6 @@
 {
   "name": "homebridge-sonybravia-platform",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "homebridge-sonybravia-platform",
   "main": "index.js",
   "devDependencies": {},
