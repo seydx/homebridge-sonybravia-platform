@@ -178,8 +178,8 @@ class APPS {
                 self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
                 self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
                 setTimeout(function() {
-                    self.getStates();
-                }, self.interval)
+                        self.getStates();
+                    }, 60 * 60 * 1000) //Checking all 60min for new Apps
 
             })
             .catch((err) => {
@@ -188,7 +188,7 @@ class APPS {
                 self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
                 setTimeout(function() {
                     self.getStates();
-                }, 30000)
+                }, 60000)
             });
 
     }
@@ -222,8 +222,8 @@ class APPS {
                         "uri": uri
                     }, "1.0")
                     .then((data) => {
-	                    
-	                    var response = JSON.parse(data);
+
+                        var response = JSON.parse(data);
 
                         self.log("Turn ON: " + self.appname);
                         self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
