@@ -35,9 +35,9 @@ function SonyBraviaPlatform(log, config, api) {
     this.ipadress = config["ipadress"];
     if (!this.ipadress) throw new Error("IP Adress is required!");
     this.interval = (config['interval'] * 1000) || 10000;
-    if (this.interval < 5) {
-        platform.log("Interval to low! Setting interval to 5 seconds");
-        this.interval = 5;
+    if ((this.interval / 1000) < 10) {
+        platform.log("Interval to low! Setting interval to 10 seconds");
+        this.interval = 10000;
     }
     this.homeapp = config["homeapp"];
     if (this.homeapp == undefined || this.homeapp == "" || this.homeapp == null) {
@@ -109,8 +109,6 @@ SonyBraviaPlatform.prototype = {
                         name: self.name,
                         psk: self.psk,
                         ipadress: self.ipadress,
-                        mac: self.mac,
-                        polling: self.polling,
                         interval: self.interval,
                         homeapp: self.homeapp
                     }
@@ -122,31 +120,36 @@ SonyBraviaPlatform.prototype = {
                 // set APP Service
                 function(next) {
 
-                    self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
-                        .then((data) => {
+                    function fetchAppService(next) {
 
-                            var response = JSON.parse(data);
-                            var AppList = response.result[0].length;
+                        self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+                            .then((data) => {
 
-                            var appListConfig = {
-                                name: self.name,
-                                psk: self.psk,
-                                ipadress: self.ipadress,
-                                mac: self.mac,
-                                polling: self.polling,
-                                interval: self.interval,
-                                maxApps: AppList
-                            }
+                                var response = JSON.parse(data);
+                                var AppList = response.result[0].length;
 
-                            var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
-                            accessoriesArray.push(appListAccessory);
+                                var appListConfig = {
+                                    name: self.name,
+                                    psk: self.psk,
+                                    ipadress: self.ipadress,
+                                    maxApps: AppList
+                                }
 
-                        })
-                        .catch((err) => {
-                            self.log(self.name + ": " + err + " - Trying again");
-                        });
+                                var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
+                                accessoriesArray.push(appListAccessory);
 
-                    next();
+                                next();
+
+                            })
+                            .catch((err) => {
+                                self.log(self.name + ": " + err + " - Trying again");
+                                setTimeout(function() {
+                                    fetchAppService(next);
+                                }, 10000)
+                            });
+
+                    }
+                    fetchAppService(next)
 
                 },
 
@@ -179,8 +182,6 @@ SonyBraviaPlatform.prototype = {
                                         name: self.name,
                                         psk: self.psk,
                                         ipadress: self.ipadress,
-                                        mac: self.mac,
-                                        polling: self.polling,
                                         interval: self.interval,
                                         homeapp: self.homeapp
                                     }
@@ -266,8 +267,6 @@ SonyBraviaPlatform.prototype = {
                                         name: self.name,
                                         psk: self.psk,
                                         ipadress: self.ipadress,
-                                        mac: self.mac,
-                                        polling: self.polling,
                                         interval: self.interval,
                                         homeapp: self.homeapp
                                     }
@@ -318,8 +317,6 @@ SonyBraviaPlatform.prototype = {
                         name: self.name,
                         psk: self.psk,
                         ipadress: self.ipadress,
-                        mac: self.mac,
-                        polling: self.polling,
                         interval: self.interval,
                         homeapp: self.homeapp
                     }
@@ -335,8 +332,6 @@ SonyBraviaPlatform.prototype = {
                         name: self.name,
                         psk: self.psk,
                         ipadress: self.ipadress,
-                        mac: self.mac,
-                        polling: self.polling,
                         interval: self.interval,
                         maxVolume: self.maxVolume
                     }
