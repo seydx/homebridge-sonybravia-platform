@@ -141,7 +141,7 @@ class SOURCES {
                 self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                 setTimeout(function() {
                     self.getStates();
-                }, 30000)
+                }, 60000)
             });
 
     }
@@ -167,11 +167,13 @@ class SOURCES {
                             .then((data) => {
 
                                 self.log("Turning on the TV...");
-                                this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(true);
+                                self.state = true;
+                                this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
 
                             })
                             .catch((err) => {
                                 self.log(self.name + ": " + err);
+                                self.state = false;
                                 self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                                 callback(null, self.state)
                             });
@@ -187,6 +189,7 @@ class SOURCES {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = false;
                     self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
@@ -197,8 +200,8 @@ class SOURCES {
                     "uri": self.homeapp
                 }, "1.0")
                 .then((data) => {
-	                
-	                var response = JSON.parse(data);
+
+                    var response = JSON.parse(data);
 
                     if ("error" in response) {
                         self.log("TV OFF");
@@ -214,6 +217,7 @@ class SOURCES {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = true;
                     self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
