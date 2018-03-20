@@ -122,7 +122,7 @@ class TVSWITCH {
                 self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                 setTimeout(function() {
                     self.getStates();
-                }, 30000)
+                }, 60000)
             });
 
     }
@@ -137,8 +137,8 @@ class TVSWITCH {
                     "status": true
                 }, "1.0")
                 .then((data) => {
-	                
-	                var response = JSON.parse(data);
+
+                    var response = JSON.parse(data);
 
                     self.log("Turning on the TV");
                     self.state = true;
@@ -148,6 +148,7 @@ class TVSWITCH {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = false;
                     self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
@@ -158,8 +159,8 @@ class TVSWITCH {
                     "status": false
                 }, "1.0")
                 .then((data) => {
-	                
-	                var response = JSON.parse(data);
+
+                    var response = JSON.parse(data);
 
                     self.log("Turning off the TV");
                     self.state = false;
@@ -169,6 +170,7 @@ class TVSWITCH {
                 })
                 .catch((err) => {
                     self.log(self.name + ": " + err);
+                    self.state = true;
                     self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
                 });
