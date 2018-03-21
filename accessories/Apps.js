@@ -53,6 +53,10 @@ class APPS {
         this.ipadress = config.ipadress;
         this.interval = config.interval;
         this.maxApps = config.maxApps;
+        this.port = config.port;
+        this.setOnCount = 0;
+        this.setOffCount = 0;
+        this.getCount = 0;
 
         !this.appnr ? this.appnr = 0 : this.appnr;
         !this.appname ? this.appname = "" : this.appname;
@@ -63,7 +67,7 @@ class APPS {
 
                 var options = {
                     host: platform.ipadress,
-                    port: 80,
+                    port: platform.port,
                     family: 4,
                     path: setPath,
                     method: 'POST',
@@ -144,7 +148,10 @@ class APPS {
 
             })
             .catch((err) => {
-                self.log("Can't show Application list, try restarting HB if you want the Application list.");
+                self.log("Can't show Application list! " + err + ". Try again...");
+                setTimeout(function() {
+                    self.getServices();
+                }, 15000)
             });
 
         this.getStates();
@@ -183,12 +190,15 @@ class APPS {
 
             })
             .catch((err) => {
-                self.log(self.name + ": " + err + " - Trying again");
                 self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
                 self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
+                if (self.getCount > 5) {
+                    self.log(self.name + ": " + err);
+                }
                 setTimeout(function() {
+                    self.getCount += 1;
                     self.getStates();
-                }, 60000)
+                }, 60000￼)
             });
 
     }
@@ -240,7 +250,7 @@ class APPS {
 
             })
             .catch((err) => {
-                self.log(self.name + ": " + err + " - Trying again");
+                self.log(self.name + ": " + err);
                 self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
                 self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
             });
