@@ -45,6 +45,17 @@ class APPS {
         inherits(Characteristic.TargetName, Characteristic);
         Characteristic.TargetName.UUID = "e2454387-a3e9-44a9-82f2-852f9628ecbc";
 
+        Characteristic.AppList = function() {
+            Characteristic.call(this, "App List", "d02e8466-323b-4773-b771-e7bfdc479d3f");
+            this.setProps({
+                format: Characteristic.Formats.BOOL,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.AppList, Characteristic);
+        Characteristic.AppList.UUID = "d02e8466-323b-4773-b771-e7bfdc479d3f";
+
         var platform = this;
 
         this.log = log;
@@ -130,6 +141,11 @@ class APPS {
             .updateValue(self.appnr)
             .on("set", this.setTargetApp.bind(this));
 
+        this.AppService.addCharacteristic(Characteristic.AppList);
+        this.AppService.getCharacteristic(Characteristic.AppList)
+            .updateValue(false)
+            .on("set", this.setAppList.bind(this));
+
         this.AppService.addCharacteristic(Characteristic.TargetName);
         this.AppService.getCharacteristic(Characteristic.TargetName)
             .updateValue(self.appname);
@@ -200,6 +216,42 @@ class APPS {
                     self.getStates();
                 }, 60000)
             });
+
+    }
+
+    setAppList(state, callback) {
+
+        var self = this;
+
+        if (state) {
+
+            this.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+                .then((data) => {
+
+                    var response = JSON.parse(data);
+
+                    var name = response.result[0];
+
+                    self.log("Following, a list of all installed Apps on the TV. Have fun.");
+                    for (var i = 0; i < name.length; i++) {
+                        self.log(i + ": " + name[i].title);
+                    }
+
+                    self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);
+                    callback()
+
+                })
+                .catch((err) => {
+                    self.log("Can't show Application list! " + err + ". Try again...");
+                    self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);
+                    callback()
+                });
+
+        } else {
+
+            callback()
+
+        }
 
     }
 
