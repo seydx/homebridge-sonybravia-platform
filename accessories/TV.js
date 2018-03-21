@@ -130,7 +130,7 @@ class TVSWITCH {
                 setTimeout(function() {
                     self.getCount += 1;
                     self.getStates();
-                }, 60000￼)
+                }, 60000)
             });
 
     }
