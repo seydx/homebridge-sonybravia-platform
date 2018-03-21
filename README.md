@@ -47,10 +47,13 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "platform":"SonyBravia", 
   "name":"Sony Bravia",
   "ipadress":"192.168.1.1",
+  "port":80
   "psk":"YourPSK",
   "interval": 5,
   "maxVolume":30,
   "extraInputs":false,
+  "volumeEnabled": true,
+  "appsEnabled": true,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":
   [
@@ -111,9 +114,12 @@ This plugin creates a Service that detects automatically all Apps from the TV. W
 |------------|----------|-------|
 | name | **Yes** | **Unique Name** for the Platform.   |
 | ipadress | **Yes** | IP adress from your Sony Bravia TV |
+| port | No | If you have problems with connecting to the TV, try a different port (Default: 80) |
 | psk | **Yes** | Your Pre Shared Key |
 | interval | No | Polling Interval in seconds (Default: 2s) |
 | extraInputs | No | Expose extra sources like AV, display mirroring etc. (Default: true) |
+| appsEnabled | No | Expose App Service to HomeKit (Not compatible with Apple Home App!) (Default: true) |
+| volumeEnabled | No | Expose a bulb to HomeKit to control TV volume (Default: true) |
 | homeapp | **Yes** | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
 | maxVolume | No | Max adjustable volume (Default: 30) |
 | cecs | No | By putting "cec" key into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
@@ -138,7 +144,7 @@ This platform and the switches it creates have been verified to work with the fo
 - [x] TODO: Bulb for volume up/down
 - [x] TODO: Service to switch between apps
 - [x] TODO: Better error handling
-- [ ] TODO: Service to switch between Channels
+- [ ] TODO: Service to switch between Channels (in work)
 
 
 ## Contributing
