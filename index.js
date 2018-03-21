@@ -26,27 +26,41 @@ function SonyBraviaPlatform(log, config, api) {
     var platform = this;
 
     this.api = api;
-
     this.config = config;
     this.log = log;
+
+    //Base
     this.name = config["name"] || "Sony";
     this.psk = config["psk"];
     if (!this.psk) throw new Error("PSK is required!");
     this.ipadress = config["ipadress"];
     if (!this.ipadress) throw new Error("IP Adress is required!");
+    this.port = config["port"] || 80;
     this.interval = (config['interval'] * 1000) || 10000;
     if ((this.interval / 1000) < 10) {
-        platform.log("Interval to low! Setting interval to 10 seconds");
+        this.log("Critical interval value! Setting interval to 10 seconds");
         this.interval = 10000;
     }
+
+    //Home App
     this.homeapp = config["homeapp"];
-    if (this.homeapp == undefined || this.homeapp == "" || this.homeapp == null) {
-        platform.log("No Home App defined, setting Home App to YouTube!");
+    if (!this.homeapp) {
+        this.log("No Home App defined, setting Home App to YouTube!");
         this.homeapp = "com.sony.dtv.com.google.android.youtube.tv.com.google.android.apps.youtube.tv.cobalt.activity.ShellActivity";
     }
-    this.maxVolume = config["maxVolume"] || 30;
+
+    //Volume
+    this.volumeEnabled = config["volumeEnabled"] || true;
+    this.maxVolume = config["maxVolume"] || 35;
+
+    //Extra Inputs
     this.extraInputs = config["extraInputs"] || false;
-    this.cecs = config["cecs"] || [];
+
+    //Apps
+    this.appsEnabled = config["appsEnabled"] || true;
+
+    //CECs
+    this.cecs = config["cecs"];
 
     this.getContent = function(setPath, setMethod, setParams, setVersion) {
 
@@ -54,7 +68,7 @@ function SonyBraviaPlatform(log, config, api) {
 
             var options = {
                 host: platform.ipadress,
-                port: 80,
+                port: platform.port,
                 family: 4,
                 path: setPath,
                 method: 'POST',
@@ -102,7 +116,6 @@ SonyBraviaPlatform.prototype = {
 
         async.waterfall([
 
-                // set TV Switch
                 function(next) {
                     var tvConfig = {
                         uri: self.uri,
@@ -110,100 +123,116 @@ SonyBraviaPlatform.prototype = {
                         psk: self.psk,
                         ipadress: self.ipadress,
                         interval: self.interval,
-                        homeapp: self.homeapp
+                        homeapp: self.homeapp,
+                        port: self.port
                     }
                     var tvAccessory = new TV_Accessory(self.log, tvConfig, self.api)
                     accessoriesArray.push(tvAccessory);
                     next();
                 },
 
-                // set APP Service
                 function(next) {
 
                     function fetchAppService(next) {
 
-                        self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
-                            .then((data) => {
+                        if (self.appsEnabled) {
 
-                                var response = JSON.parse(data);
-                                var AppList = response.result[0].length;
+                            self.log("Getting apps...")
 
-                                var appListConfig = {
-                                    name: self.name,
-                                    psk: self.psk,
-                                    ipadress: self.ipadress,
-                                    maxApps: AppList
-                                }
+                            self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+                                .then((data) => {
 
-                                var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
-                                accessoriesArray.push(appListAccessory);
+                                    var response = JSON.parse(data);
 
-                                next();
+                                    self.log("Found " + response.result[0].length + " apps!")
 
-                            })
-                            .catch((err) => {
-                                self.log(self.name + ": " + err + " - Trying again");
-                                setTimeout(function() {
-                                    fetchAppService(next);
-                                }, 10000)
-                            });
+                                    var appListConfig = {
+                                        name: self.name,
+                                        psk: self.psk,
+                                        ipadress: self.ipadress,
+                                        maxApps: response.result[0].length,
+                                        port: self.port
+                                    }
+
+                                    var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
+                                    accessoriesArray.push(appListAccessory);
+
+                                    next();
+
+                                })
+                                .catch((err) => {
+                                    self.log(self.name + ": " + err + " - Trying again");
+                                    setTimeout(function() {
+                                        fetchAppService(next);
+                                    }, 10000)
+                                });
+
+                        } else {
+                            next();
+                        }
 
                     }
                     fetchAppService(next)
 
                 },
 
-                //Push HDMI/CEC
                 function(next) {
 
                     function fetchSources(next) {
+
+                        self.log("Getting inputs...")
 
                         self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
                             .then((data) => {
 
                                 var response = JSON.parse(data);
                                 var result = response.result[0];
-
+                                var counthdmi = 0;
+                                var countcec = 0;
                                 var hdmiArray = []
-                                var objArray = []
 
                                 for (var i = 0; i < result.length; i++) {
-                                    if (result[i].title.match("HDMI")) {
-                                        objArray.push(result[i]);
+                                    if (result[i].icon == "meta:hdmi") {
+
+                                        counthdmi += 1;
+
+                                        var toConfig = {
+                                            uri: result[i].uri,
+                                            hdminame: result[i].title,
+                                            hdmiuri: result[i].uri,
+                                            name: self.name,
+                                            psk: self.psk,
+                                            ipadress: self.ipadress,
+                                            interval: self.interval,
+                                            homeapp: self.homeapp,
+                                            port: self.port
+                                        }
+
+                                        if (self.config.cecs) {
+
+                                            for (var j = 0; j < self.config.cecs.length; j++) {
+
+                                                countcec += 1;
+
+                                                var cecs = self.config.cecs;
+
+                                                if (result[i].uri.match(cecs[j].port)) {
+                                                    toConfig["cecname"] = cecs[j].label;
+                                                    toConfig["cecuri"] = "extInput:cec?type=player&port=" + cecs[j].port + "&logicalAddr=" + cecs[j].logaddr;
+                                                    toConfig["cecport"] = cecs[j].port;
+                                                    toConfig["ceclogaddr"] = cecs[j].logaddr;
+                                                }
+
+                                            }
+
+                                        }
+
+                                        hdmiArray.push(toConfig);
+
                                     }
                                 }
 
-                                objArray.forEach(function(element, index, array) {
-
-                                    var toConfig = {
-                                        uri: element.uri,
-                                        hdminame: element.title,
-                                        hdmiuri: element.uri,
-                                        name: self.name,
-                                        psk: self.psk,
-                                        ipadress: self.ipadress,
-                                        interval: self.interval,
-                                        homeapp: self.homeapp
-                                    }
-
-                                    if (self.config.cecs) {
-                                        self.config.cecs.forEach(function(cecswitch, index, array) {
-
-                                            if (element.uri.match(cecswitch.port)) {
-                                                toConfig["cecname"] = cecswitch.label;
-                                                toConfig["cecuri"] = "extInput:cec?type=player&port=" + cecswitch.port + "&logicalAddr=" + cecswitch.logaddr;
-                                                toConfig["cecport"] = cecswitch.port;
-                                                toConfig["ceclogaddr"] = cecswitch.logaddr;
-                                            } else {
-                                                return
-                                            }
-
-                                        })
-                                    }
-
-                                    hdmiArray.push(toConfig);
-
-                                })
+                                self.log("Found " + counthdmi + " HDMI inputs with " + countcec / counthdmi + " inserted CEC devices");
 
                                 next(null, hdmiArray)
 
@@ -219,7 +248,6 @@ SonyBraviaPlatform.prototype = {
                     fetchSources(next)
                 },
 
-                // Create HDMI/CEC Accessories  
                 function(hdmiArray, next) {
 
                     async.forEachOf(hdmiArray, function(zone, key, step) {
@@ -239,56 +267,63 @@ SonyBraviaPlatform.prototype = {
 
                 },
 
-
-                //Push Extra Inputs
                 function(next) {
                     function fetchExtras(next) {
 
-                        self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
-                            .then((data) => {
+                        if (self.extraInputs) {
 
-                                var response = JSON.parse(data);
-                                var result = response.result[0];
+                            self.log("Getting extra inputs...")
 
-                                var extraArray = []
-                                var exobjArray = []
+                            self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                                .then((data) => {
 
-                                for (var i = 0; i < result.length; i++) {
-                                    if (result[i].title.match("AV") || result[i].icon.match("composite") || result[i].icon.match("wifidisplay")) {
-                                        exobjArray.push(result[i]);
+                                    var response = JSON.parse(data);
+                                    var result = response.result[0];
+                                    var countex = 0;
+                                    var extraArray = []
+
+                                    for (var i = 0; i < result.length; i++) {
+                                        if (result[i].icon == "meta:scart" || result[i].icon == "meta:composite" || result[i].icon == "meta:wifidisplay") {
+
+                                            countex += 1;
+
+                                            var extraConfig = {
+                                                uri: result[i].uri,
+                                                extraname: result[i].title,
+                                                name: self.name,
+                                                psk: self.psk,
+                                                ipadress: self.ipadress,
+                                                interval: self.interval,
+                                                homeapp: self.homeapp,
+                                                port: self.port,
+                                            }
+
+                                            extraArray.push(extraConfig);
+
+                                        }
                                     }
-                                }
 
-                                exobjArray.forEach(function(element, index, array) {
+                                    self.log("Found " + countex + " extra inputs")
 
-                                    var extraConfig = {
-                                        uri: element.uri,
-                                        extraname: element.title,
-                                        name: self.name,
-                                        psk: self.psk,
-                                        ipadress: self.ipadress,
-                                        interval: self.interval,
-                                        homeapp: self.homeapp
-                                    }
-
-                                    extraArray.push(extraConfig);
+                                    next(null, extraArray)
 
                                 })
-                                next(null, extraArray)
+                                .catch((err) => {
+                                    self.log(self.name + ": " + err + " - Trying again");
+                                    setTimeout(function() {
+                                        fetchExtras(next);
+                                    }, 10000)
+                                });
 
-                            })
-                            .catch((err) => {
-                                self.log(self.name + ": " + err + " - Trying again");
-                                setTimeout(function() {
-                                    fetchExtras(next);
-                                }, 10000)
-                            });
+                        } else {
+                            var extraArray;
+                            next(null, extraArray)
+                        }
 
                     }
                     fetchExtras(next)
                 },
 
-                // Create Extra Accessories 
                 function(extraArray, next) {
                     if (self.extraInputs) {
                         async.forEachOf(extraArray, function(zone, key, step) {
@@ -310,7 +345,6 @@ SonyBraviaPlatform.prototype = {
                     }
                 },
 
-                // set Home App Switch
                 function(next) {
                     var homeConfig = {
                         uri: self.uri,
@@ -318,25 +352,32 @@ SonyBraviaPlatform.prototype = {
                         psk: self.psk,
                         ipadress: self.ipadress,
                         interval: self.interval,
-                        homeapp: self.homeapp
+                        homeapp: self.homeapp,
+                        port: self.port
                     }
                     var homeAccessory = new HOME_Accessory(self.log, homeConfig, self.api)
                     accessoriesArray.push(homeAccessory);
                     next();
                 },
 
-                // set Volume Control
                 function(next) {
-                    var volConfig = {
-                        uri: self.uri,
-                        name: self.name,
-                        psk: self.psk,
-                        ipadress: self.ipadress,
-                        interval: self.interval,
-                        maxVolume: self.maxVolume
+
+                    if (self.volumeEnabled) {
+
+                        var volConfig = {
+                            uri: self.uri,
+                            name: self.name,
+                            psk: self.psk,
+                            ipadress: self.ipadress,
+                            interval: self.interval,
+                            maxVolume: self.maxVolume,
+                            port: self.port
+                        }
+                        var volAccessory = new VOLUME_Accessory(self.log, volConfig, self.api)
+                        accessoriesArray.push(volAccessory);
+
                     }
-                    var volAccessory = new VOLUME_Accessory(self.log, volConfig, self.api)
-                    accessoriesArray.push(volAccessory);
+
                     next();
                 }
 
