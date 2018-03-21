@@ -4,7 +4,7 @@ var Accessory,
     Service,
     Characteristic;
 
-class EXTRAS {
+class EXTRAINPUTS {
 
     constructor(log, config, api) {
 
@@ -22,6 +22,10 @@ class EXTRAS {
         this.interval = config.interval;
         this.uri = config.uri;
         this.homeapp = config.homeapp;
+        this.port = config.port;
+        this.setOnCount = 0;
+        this.setOffCount = 0;
+        this.getCount = 0;
 
         !this.state ? this.state = false : this.state;
 
@@ -31,7 +35,7 @@ class EXTRAS {
 
                 var options = {
                     host: platform.ipadress,
-                    port: 80,
+                    port: platform.port,
                     family: 4,
                     path: setPath,
                     method: 'POST',
@@ -115,17 +119,21 @@ class EXTRAS {
                 }
 
                 self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.getCount = 0;
                 setTimeout(function() {
                     self.getStates();
                 }, self.interval)
 
             })
             .catch((err) => {
-                self.log(self.name + ": " + err + " - Trying again");
                 self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                if (self.getCount > 5) {
+                    self.log(self.name + ": " + err);
+                }
                 setTimeout(function() {
+                    self.getCount += 1;
                     self.getStates();
-                }, 60000)
+                }, 60000￼)
             });
 
     }
@@ -167,14 +175,23 @@ class EXTRAS {
                     }
 
                     self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.setOnCount = 0;
                     callback(null, self.state)
 
                 })
                 .catch((err) => {
-                    self.log(self.name + ": " + err);
-                    self.state = false;
-                    self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    callback(null, self.state)
+                    if (self.setOnCount <= 5) {
+                        self.state = true;
+                        setTimeout(function() {
+                            self.setOnCount += 1;
+                            self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000￼)
+                        callback(null, self.state)
+                    } else {
+                        self.state = false;
+                        self.log("Can't set " + self.name + " on! " + err)
+                        callback(null, self.state)
+                    }
                 });
 
         } else {
@@ -195,18 +212,27 @@ class EXTRAS {
                     }
 
                     self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.setOffCount = 0;
                     callback(null, self.state)
 
                 })
                 .catch((err) => {
-                    self.log(self.name + ": " + err);
-                    self.state = true;
-                    self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    callback(null, self.state)
+                    if (self.setOffCount <= 5) {
+                        self.state = false;
+                        setTimeout(function() {
+                            self.setOffCount += 1;
+                            self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000￼)
+                        callback(null, self.state)
+                    } else {
+                        self.state = true;
+                        self.log("Can't set " + self.name + " off! " + err)
+                        callback(null, self.state)
+                    }
                 });
 
         }
     }
 }
 
-module.exports = EXTRAS
+module.exports = EXTRAINPUTS
