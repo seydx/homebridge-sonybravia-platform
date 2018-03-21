@@ -10,10 +10,13 @@
   "platform":"SonyBravia",
   "name":"Sony Bravia",
   "ipadress":"192.168.1.1",
+  "port":80,
   "psk":"YourPSK",
   "interval": 5,
   "maxVolume":30,
   "extraInputs":false,
+  "appsEnabled":true,
+  "volumeEnabled":true,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":[
    {
