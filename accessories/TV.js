@@ -161,7 +161,7 @@ class TVSWITCH {
                         setTimeout(function() {
                             self.setOnCount += 1;
                             self.TVSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
-                        }, 3000￼)
+                        }, 3000)
                         callback(null, self.state)
                     } else {
                         self.state = false;
