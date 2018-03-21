@@ -4,7 +4,7 @@ var Accessory,
     Service,
     Characteristic;
 
-class SOURCES {
+class INPUTS {
 
     constructor(log, config, api) {
 
@@ -23,7 +23,11 @@ class SOURCES {
         this.uri = config.uri;
         this.homeapp = config.homeapp;
         this.hdmiuri = config.uri;
+        this.port = config.port;
         this.formatname = config.hdminame.split("/")[0];
+        this.setOnCount = 0;
+        this.setOffCount = 0;
+        this.getCount = 0;
 
         !this.state ? this.state = false : this.state;
 
@@ -47,7 +51,7 @@ class SOURCES {
 
                 var options = {
                     host: platform.ipadress,
-                    port: 80,
+                    port: platform.port,
                     family: 4,
                     path: setPath,
                     method: 'POST',
@@ -131,17 +135,21 @@ class SOURCES {
                 }
 
                 self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.getCount = 0;
                 setTimeout(function() {
                     self.getStates();
                 }, self.interval)
 
             })
             .catch((err) => {
-                self.log(self.name + ": " + err + " - Trying again");
                 self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                if (self.getCount > 5) {
+                    self.log(self.name + ": " + err);
+                }
                 setTimeout(function() {
+                    self.getCount += 1;
                     self.getStates();
-                }, 60000)
+                }, 60000￼)
             });
 
     }
@@ -172,13 +180,14 @@ class SOURCES {
 
                             })
                             .catch((err) => {
-                                self.log(self.name + ": " + err);
-                                self.state = false;
-                                self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                                self.log(self.name + ": " + err + " Try setting again...");
+                                self.state = true;
+                                this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
                                 callback(null, self.state)
                             });
 
                     } else {
+                        self.setOnCount = 0;
                         self.log("Turn ON: " + self.name);
                         self.state = true;
                     }
@@ -188,10 +197,18 @@ class SOURCES {
 
                 })
                 .catch((err) => {
-                    self.log(self.name + ": " + err);
-                    self.state = false;
-                    self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    callback(null, self.state)
+                    if (self.setOnCount <= 5) {
+                        self.state = true;
+                        setTimeout(function() {
+                            self.setOnCount += 1;
+                            self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000￼)
+                        callback(null, self.state)
+                    } else {
+                        self.state = false;
+                        self.log("Can't set " + self.name + " on! " + err)
+                        callback(null, self.state)
+                    }
                 });
 
         } else {
@@ -212,18 +229,27 @@ class SOURCES {
                     }
 
                     self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.setOffCount = 0;
                     callback(null, self.state)
 
                 })
                 .catch((err) => {
-                    self.log(self.name + ": " + err);
-                    self.state = true;
-                    self.SourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    callback(null, self.state)
+                    if (self.setOffCount <= 5) {
+                        self.state = false;
+                        setTimeout(function() {
+                            self.setOffCount += 1;
+                            self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000￼)
+                        callback(null, self.state)
+                    } else {
+                        self.state = true;
+                        self.log("Can't set " + self.name + " off! " + err)
+                        callback(null, self.state)
+                    }
                 });
 
         }
     }
 }
 
-module.exports = SOURCES
+module.exports = INPUTS
