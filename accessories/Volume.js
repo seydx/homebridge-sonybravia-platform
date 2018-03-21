@@ -188,7 +188,7 @@ class VOLUME {
                         setTimeout(function() {
                             self.setOnCount += 1;
                             self.VolumeBulb.getCharacteristic(Characteristic.On).setValue(self.state);
-                        }, 3000￼)
+                        }, 3000)
                         callback(null, self.state)
                     } else {
                         self.state = false;
