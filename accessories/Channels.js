@@ -58,10 +58,13 @@ class CHANNELS {
         this.setOffCount = 0;
         this.getCount = 0;
         this.channelSource = config.channelSource;
+        this.homeapp = config.homeapp;
+        this.favChannel = config.favChannel;
 
         !this.channelnr ? this.channelnr = 0 : this.channelnr;
         !this.channelname ? this.channelname = "" : this.channelname;
         !this.uri ? this.uri = "" : this.uri;
+        !this.state ? this.state = false : this.state;
 
         this.getContent = function(setPath, setMethod, setParams, setVersion) {
 
@@ -105,6 +108,34 @@ class CHANNELS {
             })
 
         };
+        
+	    if(!this.favChannel){
+		    this.log("No favourite Channel found in config. Setting it to 0")
+	        this.getContent("/sony/avContent", "getContentList", {
+	                "source": platform.channelSource,
+	                "stIdx": 0
+	            }, "1.2")
+	            .then((data) => {
+	
+	                var response = JSON.parse(data);
+	                var name = response.result[0];
+	
+	                for (var i = 0; i <= name.length; i++) {
+	
+	                    switch (i) {
+	                        case 0:
+	                            platform.favChannel = name[0].uri;
+	                            break;
+	                    }
+	
+	                }
+	
+	            })
+	            .catch((err) => {
+	                platform.log(self.name + ": " + err);
+	                platform.favChannel = "";
+	            });
+	    }
 
     }
 
@@ -121,6 +152,7 @@ class CHANNELS {
             .setCharacteristic(Characteristic.FirmwareRevision, require('../package.json').version);
 
         this.Channels = new Service.Channels(this.name);
+        this.ChannelSwitch = new Service.Switch(this.name + " Switch");
 
         this.Channels.addCharacteristic(Characteristic.TargetChannel);
         this.Channels.getCharacteristic(Characteristic.TargetChannel)
@@ -135,10 +167,14 @@ class CHANNELS {
         this.Channels.addCharacteristic(Characteristic.ChannelName);
         this.Channels.getCharacteristic(Characteristic.ChannelName)
             .updateValue(self.channelname);
+            
+        this.ChannelSwitch.getCharacteristic(Characteristic.On)
+        	.updateValue(self.state)
+        	.on('set', this.setChannel.bind(this));
 
         this.getStates();
 
-        return [this.informationService, this.Channels];
+        return [this.informationService, this.Channels, this.ChannelSwitch];
     }
 
     getStates(minChannels) {
@@ -147,6 +183,33 @@ class CHANNELS {
 
         self.channelnr = self.Channels.getCharacteristic(Characteristic.TargetChannel).value;
         minChannels = self.channelnr;
+        
+        self.getContent("/sony/avContent", "getPlayingContentInfo", "1.0", "1.0")
+            .then((data) => {
+	            
+                var response = JSON.parse(data);
+
+                if ("error" in response) {
+                    self.state = false;
+                } else {
+	                if(response.result[0].source == "tv:dvbt" || response.result[0].source == "tv:dvbc"){
+		                self.state = true;
+	                }
+                }
+                
+                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                
+	        })
+            .catch((err) => {
+                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                if (self.getCount > 5) {
+                    self.log(self.name + ": " + err);
+                }
+                setTimeout(function() {
+                    self.getCount += 1;
+                    self.getStates();
+                }, 60000)
+	        });
 
         self.getContent("/sony/avContent", "getContentList", {
                 "source": self.channelSource,
@@ -229,26 +292,118 @@ class CHANNELS {
                             self.state = false;
                         } else {
                             self.log("Turn ON: " + self.channelname)
-                            self.state = false;
+                            self.state = true;
                         }
 
                         self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                         self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                        self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                        callback()
 
                     })
                     .catch((err) => {
-                        self.log(self.name + ": " + err);
-                        self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                        self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+		                self.log(self.name + ": " + err);
+		                self.state = false;
+		                self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+		                self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+		                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+		                callback()
                     });
 
             })
             .catch((err) => {
                 self.log(self.name + ": " + err);
+                self.state = false;
                 self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                 self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                callback()
             });
 
+    }
+    
+    setChannel(state, callback){
+	    
+	    var self = this;
+	    
+	    if (state){
+		    
+            self.getContent("/sony/avContent", "setPlayContent", {
+                    "uri": self.favChannel
+                }, "1.0")
+                .then((data) => {
+
+                    var response = JSON.parse(data);
+
+                    if ("error" in response) {
+                        self.log("An Error occured. Try again.");
+                        self.state = false;
+                    } else {
+                        self.log("Switch to " + self.favChannel)
+                        self.state = true;
+                    }
+
+                    self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+					self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+					self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                    self.setOffCount = 0;
+                    callback(null, self.state)
+
+                })
+                .catch((err) => {
+                    if (self.setOffCount <= 5) {
+                        self.state = false;
+                        setTimeout(function() {
+                            self.setOffCount += 1;
+                            self.ChannelSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+							self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+							self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                        }, 3000)
+                        callback(null, self.state)
+                    } else {
+                        self.state = true;
+                        self.log("Can't set " + self.name + " off! " + err)
+                        callback(null, self.state)
+                    }
+                });
+		    
+	    }else{
+            self.getContent("/sony/appControl", "setActiveApp", {
+                    "uri": self.homeapp
+                }, "1.0")
+                .then((data) => {
+
+                    var response = JSON.parse(data);
+
+                    if ("error" in response) {
+                        self.log("An Error occured. Try again.");
+                        self.state = false;
+                    } else {
+                        self.log("Switch to Home App")
+                        self.state = false;
+                    }
+
+                    self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.setOffCount = 0;
+                    callback(null, self.state)
+
+                })
+                .catch((err) => {
+                    if (self.setOffCount <= 5) {
+                        self.state = false;
+                        setTimeout(function() {
+                            self.setOffCount += 1;
+                            self.ChannelSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000)
+                        callback(null, self.state)
+                    } else {
+                        self.state = true;
+                        self.log("Can't set " + self.name + " off! " + err)
+                        callback(null, self.state)
+                    }
+                });
+	    }
+	    
     }
 
 }
