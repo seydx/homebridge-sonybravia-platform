@@ -54,6 +54,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "extraInputs":false,
   "volumeEnabled": true,
   "appsEnabled": true,
+  "channelsEnabled":false,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":
   [
@@ -108,6 +109,11 @@ If you want to control your CEC devices too, do following steps (it is important
 This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possible to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
 
+## Channels
+
+This plugin creates a Service that detects automatically all Channels from the TV. With Elgato EVE App it is possible to create scenes to activate channel or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
+
+
 ## Options
 
 | **Attributes** | **Required** | **Usage** |
@@ -120,6 +126,8 @@ This plugin creates a Service that detects automatically all Apps from the TV. W
 | extraInputs | No | Expose extra sources like AV, display mirroring etc. (Default: true) |
 | appsEnabled | No | Expose App Service to HomeKit (Not compatible with Apple Home App!) (Default: true) |
 | volumeEnabled | No | Expose a bulb to HomeKit to control TV volume (Default: true) |
+| channelsEnabled | No | Expose Channel Service to HomeKit (Not compatible with Apple Home App!) (Default: false) |
+| channelSource | No | Source type (tv:dvbt , tv:dvbc) (Default: tv:dvbt) |
 | homeapp | **Yes** | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
 | maxVolume | No | Max adjustable volume (Default: 30) |
 | cecs | No | By putting "cec" key into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
