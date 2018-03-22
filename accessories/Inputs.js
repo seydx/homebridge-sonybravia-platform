@@ -92,7 +92,7 @@ class INPUTS {
 
     getServices() {
 
-        var accessory = this;
+        var self = this;
 
         this.informationService = new Service.AccessoryInformation()
             .setCharacteristic(Characteristic.Name, this.name)
@@ -105,7 +105,7 @@ class INPUTS {
         this.SourceSwitch = new Service.Switch(this.name);
 
         this.SourceSwitch.getCharacteristic(Characteristic.On)
-            .updateValue(self.state)
+            .updateValue(this.state)
             .on('set', this.setSourceSwitch.bind(this));
 
         this.getStates();
