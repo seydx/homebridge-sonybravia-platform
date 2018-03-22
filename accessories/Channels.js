@@ -134,8 +134,8 @@ class CHANNELS {
             .setCharacteristic(Characteristic.SerialNumber, "Sony-Channels")
             .setCharacteristic(Characteristic.FirmwareRevision, require('../package.json').version);
 
-        this.Channels = new Service.Channels(this.name + " Service");
-        this.ChannelSwitch = new Service.Switch(this.name);
+        //this.Channels = new Service.Channels(this.name + " Service");
+        this.Channels = new Service.Switch(this.name);
 
         this.Channels.addCharacteristic(Characteristic.TargetChannel);
         this.Channels.getCharacteristic(Characteristic.TargetChannel)
@@ -155,13 +155,13 @@ class CHANNELS {
         this.Channels.getCharacteristic(Characteristic.FavouriteChannelName)
             .updateValue(self.favchannelname);
 
-        this.ChannelSwitch.getCharacteristic(Characteristic.On)
+        this.Channels.getCharacteristic(Characteristic.On)
             .updateValue(self.state)
             .on('set', this.setChannel.bind(this));
 
         this.getStates();
 
-        return [this.informationService, this.Channels, this.ChannelSwitch];
+        return [this.informationService, this.Channels];
     }
 
     getStates(minChannels) {
@@ -184,11 +184,11 @@ class CHANNELS {
                     }
                 }
 
-                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
 
             })
             .catch((err) => {
-                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                 if (self.getCount > 5) {
                     self.log(self.name + ": " + err);
                 }
@@ -284,7 +284,7 @@ class CHANNELS {
 
                         self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                         self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                        self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                        self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                         callback()
 
                     })
@@ -293,7 +293,7 @@ class CHANNELS {
                         self.state = false;
                         self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                         self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                        self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                        self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                         callback()
                     });
 
@@ -303,7 +303,7 @@ class CHANNELS {
                 self.state = false;
                 self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                 self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                 callback()
             });
 
@@ -330,7 +330,7 @@ class CHANNELS {
                         self.state = true;
                     }
 
-                    self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                     self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(0);
                     self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.favchannelname);
                     self.setOffCount = 0;
@@ -342,7 +342,7 @@ class CHANNELS {
                         self.state = false;
                         setTimeout(function() {
                             self.setOffCount += 1;
-                            self.ChannelSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
                             self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                             self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                         }, 3000)
@@ -370,7 +370,7 @@ class CHANNELS {
                         self.state = false;
                     }
 
-                    self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                     self.setOffCount = 0;
                     callback(null, self.state)
 
@@ -380,7 +380,7 @@ class CHANNELS {
                         self.state = false;
                         setTimeout(function() {
                             self.setOffCount += 1;
-                            self.ChannelSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
                         }, 3000)
                         callback(null, self.state)
                     } else {
