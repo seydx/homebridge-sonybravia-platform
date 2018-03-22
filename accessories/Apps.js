@@ -20,7 +20,7 @@ class APPS {
         Service.AppService.UUID = "1d837d23-84f7-424a-91b9-0b1fe288e1d2";
 
         Characteristic.TargetApp = function() {
-            Characteristic.call(this, "Target App Nr", "613f5692-4713-4743-85ca-627e8f17d3bf");
+            Characteristic.call(this, "App Nr", "613f5692-4713-4743-85ca-627e8f17d3bf");
             this.setProps({
                 format: Characteristic.Formats.UINT8,
                 unit: Characteristic.Units.NONE,
@@ -35,7 +35,7 @@ class APPS {
         Characteristic.TargetApp.UUID = "613f5692-4713-4743-85ca-627e8f17d3bf";
 
         Characteristic.TargetName = function() {
-            Characteristic.call(this, "Target App Name", "e2454387-a3e9-44a9-82f2-852f9628ecbc");
+            Characteristic.call(this, "App", "e2454387-a3e9-44a9-82f2-852f9628ecbc");
             this.setProps({
                 format: Characteristic.Formats.STRING,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
