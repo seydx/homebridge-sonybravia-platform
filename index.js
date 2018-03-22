@@ -149,7 +149,9 @@ function SonyBraviaPlatform(log, config, api) {
                 platform.favChannel = "";
             });
     } else {
-        platform.favchannelname = platform.favChannel.split("Name=").pop();
+	    if(this.channelsEnabled && this.favChannel){
+		    platform.favchannelname = platform.favChannel.split("Name=").pop();
+	    }
     }
 
 }
