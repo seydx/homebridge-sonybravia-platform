@@ -17,6 +17,7 @@
   "extraInputs":false,
   "appsEnabled":true,
   "volumeEnabled":true,
+  "channelsEnabled":true,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":[
    {
