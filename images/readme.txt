@@ -1,1 +1,0 @@
-HomeKit Overview Images
