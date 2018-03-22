@@ -19,8 +19,19 @@ class CHANNELS {
         inherits(Service.Channels, Service);
         Service.Channels.UUID = "9a7bf0f7-694e-4ae1-9706-95891a1bc76e";
 
+        Characteristic.FavouriteChannelName = function() {
+            Characteristic.call(this, "Favourite Channel", "426ad0a9-4272-4749-836d-a76c1324e566");
+            this.setProps({
+                format: Characteristic.Formats.STRING,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.FavouriteChannelName, Characteristic);
+        Characteristic.FavouriteChannelName.UUID = "426ad0a9-4272-4749-836d-a76c1324e566";
+
         Characteristic.ChannelName = function() {
-            Characteristic.call(this, "Channel", "a4352cad-842b-47c1-9ef3-0300199ec849");
+            Characteristic.call(this, "Target Channel", "a4352cad-842b-47c1-9ef3-0300199ec849");
             this.setProps({
                 format: Characteristic.Formats.STRING,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
@@ -31,7 +42,7 @@ class CHANNELS {
         Characteristic.ChannelName.UUID = "a4352cad-842b-47c1-9ef3-0300199ec849";
 
         Characteristic.TargetChannel = function() {
-            Characteristic.call(this, "Channel Nr", "b098e733-c600-4e89-a079-9625e20d5424");
+            Characteristic.call(this, "Target Channel Nr", "b098e733-c600-4e89-a079-9625e20d5424");
             this.setProps({
                 format: Characteristic.Formats.UINT8,
                 unit: Characteristic.Units.NONE,
@@ -63,6 +74,7 @@ class CHANNELS {
 
         !this.channelnr ? this.channelnr = 0 : this.channelnr;
         !this.channelname ? this.channelname = "" : this.channelname;
+        !this.favchannelname ? this.favchannelname = "" : this.favchannelname;
         !this.uri ? this.uri = "" : this.uri;
         !this.state ? this.state = false : this.state;
 
@@ -110,7 +122,7 @@ class CHANNELS {
         };
 
         if (!this.favChannel) {
-            this.log("No favourite Channel found in config. Setting it to 0")
+            this.log("No favourite Channel found in config. Setting channel number to 1")
             this.getContent("/sony/avContent", "getContentList", {
                     "source": platform.channelSource,
                     "stIdx": 0
@@ -125,6 +137,7 @@ class CHANNELS {
                         switch (i) {
                             case 0:
                                 platform.favChannel = name[0].uri;
+                                platform.favchannelname = name[0].title;
                                 break;
                         }
 
@@ -135,6 +148,8 @@ class CHANNELS {
                     platform.log(self.name + ": " + err);
                     platform.favChannel = "";
                 });
+        } else {
+            platform.favchannelname = platform.favChannel.split("Name=").pop();
         }
 
     }
@@ -167,6 +182,10 @@ class CHANNELS {
         this.Channels.addCharacteristic(Characteristic.ChannelName);
         this.Channels.getCharacteristic(Characteristic.ChannelName)
             .updateValue(self.channelname);
+
+        this.Channels.addCharacteristic(Characteristic.FavouriteChannelName);
+        this.Channels.getCharacteristic(Characteristic.FavouriteChannelName)
+            .updateValue(self.favchannelname);
 
         this.ChannelSwitch.getCharacteristic(Characteristic.On)
             .updateValue(self.state)
@@ -339,13 +358,13 @@ class CHANNELS {
                         self.log("An Error occured. Try again.");
                         self.state = false;
                     } else {
-                        self.log("Switch to " + self.favChannel)
+                        self.log("Switch to " + self.favchannelname)
                         self.state = true;
                     }
 
                     self.ChannelSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                    self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                    self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(0);
+                    self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.favchannelname);
                     self.setOffCount = 0;
                     callback(null, self.state)
 
@@ -362,7 +381,7 @@ class CHANNELS {
                         callback(null, self.state)
                     } else {
                         self.state = true;
-                        self.log("Can't set " + self.name + " off! " + err)
+                        self.log("Can't set " + self.favchannelname + " off! " + err)
                         callback(null, self.state)
                     }
                 });
