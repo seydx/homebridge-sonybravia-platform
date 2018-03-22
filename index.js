@@ -104,6 +104,54 @@ function SonyBraviaPlatform(log, config, api) {
 
     };
 
+    if (!this.homeapp) {
+        this.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+            .then((data) => {
+
+                var response = JSON.parse(data);
+                var name = response.result[0];
+
+                this.log("No home app found in config. Setting home app to " + name[0].title)
+                platform.homeapp = name[0].uri;
+                platform.favappname = name[0].title;
+
+            })
+            .catch((err) => {
+                throw new Error(platform.name + ": " + err + " - Starting HB again...");
+            });
+    }
+
+    if (this.channelsEnabled && !this.favChannel) {
+        this.log("No favourite Channel found in config. Setting channel number to 1")
+        this.getContent("/sony/avContent", "getContentList", {
+                "source": platform.channelSource,
+                "stIdx": 0
+            }, "1.2")
+            .then((data) => {
+
+                var response = JSON.parse(data);
+                var name = response.result[0];
+
+                for (var i = 0; i <= name.length; i++) {
+
+                    switch (i) {
+                        case 0:
+                            platform.favChannel = name[0].uri;
+                            platform.favchannelname = name[0].title;
+                            break;
+                    }
+
+                }
+
+            })
+            .catch((err) => {
+                platform.log(self.name + ": " + err);
+                platform.favChannel = "";
+            });
+    } else {
+        platform.favchannelname = platform.favChannel.split("Name=").pop();
+    }
+
 }
 
 SonyBraviaPlatform.prototype = {
@@ -152,7 +200,8 @@ SonyBraviaPlatform.prototype = {
                                         maxApps: response.result[0].length,
                                         port: self.port,
                                         interval: self.interval,
-                                        homeapp: self.homeapp
+                                        homeapp: self.homeapp,
+                                        favvappname: self.favappname
                                     }
 
                                     var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
@@ -201,7 +250,8 @@ SonyBraviaPlatform.prototype = {
                                         interval: self.interval,
                                         channelSource: self.channelSource,
                                         homeapp: self.homeapp,
-                                        favChannel: self.favChannel
+                                        favChannel: self.favChannel,
+                                        favchannelname: self.favchannelname
                                     }
 
                                     self.log("Found " + channelListConfig.maxChannels + " channels!")
