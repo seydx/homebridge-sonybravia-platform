@@ -61,7 +61,7 @@ function SonyBraviaPlatform(log, config, api) {
     this.appsEnabled = config["appsEnabled"] || true;
 
     //Channels
-    this.appsEnabled = config["channelsEnabled"] || false;
+    this.channelsEnabled = config["channelsEnabled"] || false;
     this.channelSource = config["channelSource"] || "tv:dvbt";
 
     //CECs
@@ -186,7 +186,7 @@ SonyBraviaPlatform.prototype = {
 
                     function fetchChannels(next) {
 
-                        if (self.appsEnabled) {
+                        if (self.channelsEnabled) {
 
                             self.log("Getting channels...")
 
