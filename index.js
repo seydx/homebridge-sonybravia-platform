@@ -104,23 +104,6 @@ function SonyBraviaPlatform(log, config, api) {
 
     };
 
-    if (!this.homeapp) {
-        this.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
-            .then((data) => {
-
-                var response = JSON.parse(data);
-                var name = response.result[0];
-
-                this.log("No home app found in config. Setting home app to " + name[0].title)
-                platform.homeapp = name[0].uri;
-                platform.favappname = name[0].title;
-
-            })
-            .catch((err) => {
-                throw new Error(platform.name + ": " + err + " - Starting HB again...");
-            });
-    }
-
     if (this.channelsEnabled && !this.favChannel) {
         this.log("No favourite Channel found in config. Setting channel number to 1")
         this.getContent("/sony/avContent", "getContentList", {
@@ -149,9 +132,9 @@ function SonyBraviaPlatform(log, config, api) {
                 platform.favChannel = "";
             });
     } else {
-	    if(this.channelsEnabled && this.favChannel){
-		    platform.favchannelname = platform.favChannel.split("Name=").pop();
-	    }
+        if (this.channelsEnabled && this.favChannel) {
+            platform.favchannelname = platform.favChannel.split("Name=").pop();
+        }
     }
 
 }
@@ -192,6 +175,19 @@ SonyBraviaPlatform.prototype = {
                                 .then((data) => {
 
                                     var response = JSON.parse(data);
+                                    var result = response.result[0]
+
+                                    if (!self.homeapp) {
+                                        self.log("No home app found in config. Setting home app to " + result[0].title)
+                                        self.homeapp = result[0].uri;
+                                        self.favappname = result[0].title;
+                                    } else {
+                                        for (var i = 0; i < result.length; i++) {
+                                            if (self.homeapp == result[i].uri) {
+                                                self.favappname = result[i].title;
+                                            }
+                                        }
+                                    }
 
                                     self.log("Found " + response.result[0].length + " apps!")
 
@@ -203,10 +199,10 @@ SonyBraviaPlatform.prototype = {
                                         port: self.port,
                                         interval: self.interval,
                                         homeapp: self.homeapp,
-                                        favvappname: self.favappname
+                                        favappname: self.favappname
                                     }
 
-                                    var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
+                                    var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api, result)
                                     accessoriesArray.push(appListAccessory);
 
                                     next();
