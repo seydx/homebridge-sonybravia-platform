@@ -355,7 +355,7 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("An Error occured. Try again.");
+                        self.log("An Error occured. Try again." + JSON.stringify(response));
                         self.state = false;
                     } else {
                         self.log("Switch to " + self.favchannelname)
@@ -395,7 +395,7 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("An Error occured. Try again.");
+                        self.log("An Error occured. Try again." + JSON.stringify(response));
                         self.state = false;
                     } else {
                         self.log("Switch to Home App")
