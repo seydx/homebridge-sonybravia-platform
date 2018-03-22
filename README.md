@@ -1,4 +1,4 @@
-# homebridge-sonybravia-platform v2.1
+# homebridge-sonybravia-platform v2.2
 
 [![npm](https://img.shields.io/npm/v/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
 [![npm](https://img.shields.io/npm/dt/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
