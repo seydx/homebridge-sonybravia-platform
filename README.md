@@ -146,7 +146,7 @@ If you want to control your CEC devices too, do following steps (it is important
 | volumeEnabled | No | Expose a bulb to HomeKit to control TV volume (Default: true) |
 | channelsEnabled | No | Expose Channel Service to HomeKit (Not compatible with Apple Home App!) (Default: false) |
 | channelSource | No | Source type (tv:dvbt , tv:dvbc) (Default: tv:dvbt) |
-| homeapp | **Yes** | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
+| homeapp | No | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
 | favChannel | No | Setting favourite channel for the Channel Switch |
 | maxVolume | No | Max adjustable volume (Default: 30) |
 | cecs | No | By putting "cec" key into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
