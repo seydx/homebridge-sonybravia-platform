@@ -6,8 +6,7 @@ var TV_Accessory = require('./accessories/TV.js'),
     APP_Accessory = require('./accessories/Apps.js'),
     CHANNEL_Accessory = require('./accessories/Channels.js'),
     SOURCE_Accessory = require('./accessories/Inputs.js'),
-    EXTRAS_Accessory = require('./accessories/Extras.js'),
-    HOME_Accessory = require('./accessories/Home.js');
+    EXTRAS_Accessory = require('./accessories/Extras.js');
 
 var Accessory,
     Service,
@@ -43,13 +42,6 @@ function SonyBraviaPlatform(log, config, api) {
         this.interval = 10000;
     }
 
-    //Home App
-    this.homeapp = config["homeapp"];
-    if (!this.homeapp) {
-        this.log("No Home App defined, setting Home App to YouTube!");
-        this.homeapp = "com.sony.dtv.com.google.android.youtube.tv.com.google.android.apps.youtube.tv.cobalt.activity.ShellActivity";
-    }
-
     //Volume
     this.volumeEnabled = config["volumeEnabled"] || true;
     this.maxVolume = config["maxVolume"] || 35;
@@ -59,6 +51,7 @@ function SonyBraviaPlatform(log, config, api) {
 
     //Apps
     this.appsEnabled = config["appsEnabled"] || true;
+    this.homeapp = config["homeapp"];
 
     //Channels
     this.channelsEnabled = config["channelsEnabled"] || false;
@@ -158,7 +151,8 @@ SonyBraviaPlatform.prototype = {
                                         ipadress: self.ipadress,
                                         maxApps: response.result[0].length,
                                         port: self.port,
-                                        interval: self.interval
+                                        interval: self.interval,
+                                        homeapp: self.homeapp
                                     }
 
                                     var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
@@ -401,21 +395,6 @@ SonyBraviaPlatform.prototype = {
                     } else {
                         next();
                     }
-                },
-
-                function(next) {
-                    var homeConfig = {
-                        uri: self.uri,
-                        name: self.name,
-                        psk: self.psk,
-                        ipadress: self.ipadress,
-                        interval: self.interval,
-                        homeapp: self.homeapp,
-                        port: self.port
-                    }
-                    var homeAccessory = new HOME_Accessory(self.log, homeConfig, self.api)
-                    accessoriesArray.push(homeAccessory);
-                    next();
                 },
 
                 function(next) {
