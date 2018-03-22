@@ -20,7 +20,7 @@ class APPS {
         Service.AppService.UUID = "1d837d23-84f7-424a-91b9-0b1fe288e1d2";
 
         Characteristic.TargetApp = function() {
-            Characteristic.call(this, "App Nr", "613f5692-4713-4743-85ca-627e8f17d3bf");
+            Characteristic.call(this, "Target App Nr", "613f5692-4713-4743-85ca-627e8f17d3bf");
             this.setProps({
                 format: Characteristic.Formats.UINT8,
                 unit: Characteristic.Units.NONE,
@@ -35,7 +35,7 @@ class APPS {
         Characteristic.TargetApp.UUID = "613f5692-4713-4743-85ca-627e8f17d3bf";
 
         Characteristic.TargetName = function() {
-            Characteristic.call(this, "App", "e2454387-a3e9-44a9-82f2-852f9628ecbc");
+            Characteristic.call(this, "Target App", "e2454387-a3e9-44a9-82f2-852f9628ecbc");
             this.setProps({
                 format: Characteristic.Formats.STRING,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
@@ -44,6 +44,17 @@ class APPS {
         };
         inherits(Characteristic.TargetName, Characteristic);
         Characteristic.TargetName.UUID = "e2454387-a3e9-44a9-82f2-852f9628ecbc";
+
+        Characteristic.FavouriteAppName = function() {
+            Characteristic.call(this, "Home App", "a7dfed60-96ab-4b16-a265-d77ccf070a6f");
+            this.setProps({
+                format: Characteristic.Formats.STRING,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.FavouriteAppName, Characteristic);
+        Characteristic.FavouriteAppName.UUID = "a7dfed60-96ab-4b16-a265-d77ccf070a6f";
 
         Characteristic.AppList = function() {
             Characteristic.call(this, "App List", "d02e8466-323b-4773-b771-e7bfdc479d3f");
@@ -68,9 +79,12 @@ class APPS {
         this.setOnCount = 0;
         this.setOffCount = 0;
         this.getCount = 0;
+        this.homeapp = config.homeapp;
 
         !this.appnr ? this.appnr = 0 : this.appnr;
         !this.appname ? this.appname = "" : this.appname;
+        !this.favappname ? this.favappname = "" : this.favappname;
+        !this.state ? this.state = false : this.state;
 
         this.getContent = function(setPath, setMethod, setParams, setVersion) {
 
@@ -129,7 +143,8 @@ class APPS {
             .setCharacteristic(Characteristic.SerialNumber, "Sony-Apps")
             .setCharacteristic(Characteristic.FirmwareRevision, require('../package.json').version);
 
-        this.AppService = new Service.AppService(this.name);
+        this.AppService = new Service.AppService(this.name + " Service");
+        this.AppService = new Service.Switch(this.name);
 
         this.AppService.addCharacteristic(Characteristic.TargetApp);
         this.AppService.getCharacteristic(Characteristic.TargetApp)
@@ -150,6 +165,14 @@ class APPS {
         this.AppService.getCharacteristic(Characteristic.TargetName)
             .updateValue(self.appname);
 
+        this.AppService.addCharacteristic(Characteristic.FavouriteAppName);
+        this.AppService.getCharacteristic(Characteristic.FavouriteAppName)
+            .updateValue(self.favappname);
+
+        this.AppService.getCharacteristic(Characteristic.On)
+            .updateValue(self.state)
+            .on('set', this.setHomeApp.bind(this));
+
         this.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
             .then((data) => {
 
@@ -157,10 +180,24 @@ class APPS {
 
                 var name = response.result[0];
 
+                if (!self.homeapp ||  self.homeapp == "") {
+                    this.log("No home app found in config. Setting home app to " + name[0].title)
+                    self.homeapp = name[0].uri;
+                    self.favappname = name[0].title;
+                } else {
+                    for (var i = 0; i < name.length; i++) {
+                        if (self.homeapp == name[i].uri) {
+                            self.favappname = name[i].title;
+                        }
+                    }
+                }
+
                 self.log("Following, a list of all installed Apps on the TV. Have fun.");
                 for (var i = 0; i < name.length; i++) {
                     self.log(i + ": " + name[i].title);
                 }
+
+                self.AppService.getCharacteristic(Characteristic.FavouriteAppName).updateValue(self.favappname);
 
             })
             .catch((err) => {
@@ -180,6 +217,39 @@ class APPS {
         var self = this;
 
         self.appnr = self.AppService.getCharacteristic(Characteristic.TargetApp).value;
+
+        self.getContent("/sony/avContent", "getPlayingContentInfo", "1.0", "1.0")
+            .then((data) => {
+
+                var response = JSON.parse(data);
+
+                if ("error" in response) {
+                    if (response.error[0] === 7) {
+                        self.state = true;
+                    } else {
+                        self.state = false;
+                    }
+                } else {
+                    self.state = false;
+                }
+
+                self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.getCount = 0;
+                setTimeout(function() {
+                    self.getStates();
+                }, self.interval)
+
+            })
+            .catch((err) => {
+                self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
+                if (self.getCount > 5) {
+                    self.log(self.name + ": " + err);
+                }
+                setTimeout(function() {
+                    self.getCount += 1;
+                    self.getStates();
+                }, 60000)
+            });
 
         self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
             .then((data) => {
@@ -306,6 +376,70 @@ class APPS {
                 self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
                 self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
             });
+
+    }
+
+    setHomeApp(state, callback) {
+
+        var self = this;
+
+        if (state) {
+            self.getContent("/sony/appControl", "setActiveApp", {
+                    "uri": self.homeapp
+                }, "1.0")
+                .then((data) => {
+
+                    var response = JSON.parse(data);
+
+                    self.log("Turn ON: " + self.favappname);
+                    self.state = true;
+                    self.setOnCount = 0;
+                    self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    callback(null, self.state)
+
+                })
+                .catch((err) => {
+                    if (self.setOnCount <= 5) {
+                        self.state = true;
+                        setTimeout(function() {
+                            self.setOnCount += 1;
+                            self.AppService.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000)
+                        callback(null, self.state)
+                    } else {
+                        self.state = false;
+                        self.log("Can't set " + self.name + " on! " + err)
+                        callback(null, self.state)
+                    }
+                });
+        } else {
+            self.getContent("/sony/appControl", "terminateApps", "1.0", "1.0")
+                .then((data) => {
+
+                    var response = JSON.parse(data);
+
+                    self.log("Turn off current app");
+                    self.state = false;
+                    self.setOffCount = 0;
+                    self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    callback(null, self.state)
+
+                })
+                .catch((err) => {
+                    if (self.setOffCount <= 5) {
+                        self.state = false;
+                        setTimeout(function() {
+                            self.setOffCount += 1;
+                            self.AppService.getCharacteristic(Characteristic.On).setValue(self.state);
+                        }, 3000)
+                        callback(null, self.state)
+                    } else {
+                        self.state = true;
+                        self.log("Can't set " + self.name + " off! " + err)
+                        callback(null, self.state)
+                    }
+                });
+        }
 
     }
 
