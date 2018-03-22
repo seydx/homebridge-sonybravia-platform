@@ -18,6 +18,7 @@
   "appsEnabled":true,
   "volumeEnabled":true,
   "channelsEnabled":true,
+  "favChannel":"tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD",
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "cecs":[
    {
