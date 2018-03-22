@@ -121,7 +121,7 @@ class CHANNELS {
 
         };
 
-        if (!this.favChannel) {
+        if (!this.favChannel || this.favChannel == "") {
             this.log("No favourite Channel found in config. Setting channel number to 1")
             this.getContent("/sony/avContent", "getContentList", {
                     "source": platform.channelSource,
@@ -166,8 +166,8 @@ class CHANNELS {
             .setCharacteristic(Characteristic.SerialNumber, "Sony-Channels")
             .setCharacteristic(Characteristic.FirmwareRevision, require('../package.json').version);
 
-        this.Channels = new Service.Channels(this.name);
-        this.ChannelSwitch = new Service.Switch(this.name + " Switch");
+        this.Channels = new Service.Channels(this.name + " Service");
+        this.ChannelSwitch = new Service.Switch(this.name);
 
         this.Channels.addCharacteristic(Characteristic.TargetChannel);
         this.Channels.getCharacteristic(Characteristic.TargetChannel)
