@@ -56,6 +56,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "appsEnabled": true,
   "channelsEnabled":false,
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
+  "favChannel":"tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD",
   "cecs":
   [
    {
@@ -114,6 +115,15 @@ This plugin creates a Service that detects automatically all Apps from the TV. W
 This plugin creates a Service that detects automatically all Channels from the TV. With Elgato EVE App it is possible to create scenes to activate channel or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
 
 
+### Favourite Channel (favChannel)
+
+With the following command for terminal you will get your favourite channel (Change TVIPHERE, YOURPSKERE with your data, be sure that **jq** is installed, see above! NOTE: **"stIx"** is your channel number on the TV, BUT you need to substract with 1! i.e. Channel Numb on tv is 30, then **"stIx"** is 29!)
+
+- ```curl -XPOST http://TVIPHERE/sony/avContent -d '{"id":2,"method":"getContentList","version":"1.2","params":[{"source":"tv:dvbt","stIx":0}]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[][0]'```
+
+For your config.json you need the "uri" from output. i.e: **tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD**
+
+
 ## Options
 
 | **Attributes** | **Required** | **Usage** |
@@ -129,6 +139,7 @@ This plugin creates a Service that detects automatically all Channels from the T
 | channelsEnabled | No | Expose Channel Service to HomeKit (Not compatible with Apple Home App!) (Default: false) |
 | channelSource | No | Source type (tv:dvbt , tv:dvbc) (Default: tv:dvbt) |
 | homeapp | **Yes** | Cause it is not possible to switch off a HDMI Input or CEC, the homeapp will be activated instead |
+| favChannel | No | Setting favourite channel for the Channel Switch |
 | maxVolume | No | Max adjustable volume (Default: 30) |
 | cecs | No | By putting "cec" key into your config.json, this plugin will expose the HDMI Input of the device with CEC functionality |
 | label | **Yes (only if created a cec)** | Is the name of your CEC Device (i.e. Apple TV)|
