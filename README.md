@@ -32,7 +32,28 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 - Enter a "Pre-Shared Key" in your Android TV Settings -> Network -> IP control -> Pre-Shared Key
  
  
-## Example config.json:
+## Basic config.json:
+
+ ```
+{
+ "bridge": {
+   ...
+},
+ "accessories": [
+   ...
+],
+ "platforms": [
+ {
+  "platform":"SonyBravia", 
+  "name":"Sony",
+  "ipadress":"192.168.1.1",
+  "psk":"YourPSK",
+ }
+]
+}
+```
+ 
+## Advanced config.json:
 
  ```
 {
