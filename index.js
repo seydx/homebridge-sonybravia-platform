@@ -4,6 +4,7 @@ var http = require("http"),
 var TV_Accessory = require('./accessories/TV.js'),
     VOLUME_Accessory = require('./accessories/Volume.js'),
     APP_Accessory = require('./accessories/Apps.js'),
+    CHANNEL_Accessory = require('./accessories/Channels.js'),
     SOURCE_Accessory = require('./accessories/Inputs.js'),
     EXTRAS_Accessory = require('./accessories/Extras.js'),
     HOME_Accessory = require('./accessories/Home.js');
@@ -58,6 +59,10 @@ function SonyBraviaPlatform(log, config, api) {
 
     //Apps
     this.appsEnabled = config["appsEnabled"] || true;
+
+    //Channels
+    this.appsEnabled = config["channelsEnabled"] || false;
+    this.channelSource = config["channelSource"] || "tv:dvbt";
 
     //CECs
     this.cecs = config["cecs"];
@@ -151,7 +156,8 @@ SonyBraviaPlatform.prototype = {
                                         psk: self.psk,
                                         ipadress: self.ipadress,
                                         maxApps: response.result[0].length,
-                                        port: self.port
+                                        port: self.port,
+                                        interval: self.interval
                                     }
 
                                     var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api)
@@ -173,6 +179,55 @@ SonyBraviaPlatform.prototype = {
 
                     }
                     fetchAppService(next)
+
+                },
+
+                function(next) {
+
+                    function fetchChannels(next) {
+
+                        if (self.appsEnabled) {
+
+                            self.log("Getting channels...")
+
+                            self.getContent("/sony/avContent", "getContentCount", {
+                                    "source": self.channelSource
+                                }, "1.0")
+                                .then((data) => {
+
+                                    var response = JSON.parse(data);
+
+                                    var channelListConfig = {
+                                        name: self.name,
+                                        psk: self.psk,
+                                        ipadress: self.ipadress,
+                                        maxChannels: response.result[0].count - 1,
+                                        port: self.port,
+                                        interval: self.interval,
+                                        channelSource: self.channelSource
+                                    }
+
+                                    self.log("Found " + channelListConfig.maxChannels + " channels!")
+
+                                    var channelListAccessory = new CHANNEL_Accessory(self.log, channelListConfig, self.api)
+                                    accessoriesArray.push(channelListAccessory);
+
+                                    next();
+
+                                })
+                                .catch((err) => {
+                                    self.log(self.name + ": " + err + " - Trying again");
+                                    setTimeout(function() {
+                                        fetchChannels(next);
+                                    }, 10000)
+                                });
+
+                        } else {
+                            next();
+                        }
+
+                    }
+                    fetchChannels(next)
 
                 },
 
