@@ -71,11 +71,10 @@ class CHANNELS {
         this.channelSource = config.channelSource;
         this.homeapp = config.homeapp;
         this.favChannel = config.favChannel;
+        this.favchannelname = config.favchannelname;
 
         !this.channelnr ? this.channelnr = 0 : this.channelnr;
         !this.channelname ? this.channelname = "" : this.channelname;
-        !this.favchannelname ? this.favchannelname = "" : this.favchannelname;
-        !this.uri ? this.uri = "" : this.uri;
         !this.state ? this.state = false : this.state;
 
         this.getContent = function(setPath, setMethod, setParams, setVersion) {
@@ -120,37 +119,6 @@ class CHANNELS {
             })
 
         };
-
-        if (!this.favChannel || this.favChannel == "") {
-            this.log("No favourite Channel found in config. Setting channel number to 1")
-            this.getContent("/sony/avContent", "getContentList", {
-                    "source": platform.channelSource,
-                    "stIdx": 0
-                }, "1.2")
-                .then((data) => {
-
-                    var response = JSON.parse(data);
-                    var name = response.result[0];
-
-                    for (var i = 0; i <= name.length; i++) {
-
-                        switch (i) {
-                            case 0:
-                                platform.favChannel = name[0].uri;
-                                platform.favchannelname = name[0].title;
-                                break;
-                        }
-
-                    }
-
-                })
-                .catch((err) => {
-                    platform.log(self.name + ": " + err);
-                    platform.favChannel = "";
-                });
-        } else {
-            platform.favchannelname = platform.favChannel.split("Name=").pop();
-        }
 
     }
 
@@ -355,7 +323,7 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("An Error occured. Try again." + JSON.stringify(response));
+                        self.log("An Error occured. Try again. Error: " + JSON.stringify(response));
                         self.state = false;
                     } else {
                         self.log("Switch to " + self.favchannelname)
@@ -395,7 +363,7 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("An Error occured. Try again." + JSON.stringify(response));
+                        self.log("An Error occured. Try again. Error: " + JSON.stringify(response));
                         self.state = false;
                     } else {
                         self.log("Switch to Home App")
