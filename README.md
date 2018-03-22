@@ -152,7 +152,7 @@ This platform and the switches it creates have been verified to work with the fo
 - [x] TODO: Bulb for volume up/down
 - [x] TODO: Service to switch between apps
 - [x] TODO: Better error handling
-- [ ] TODO: Service to switch between Channels (in work)
+- [x] TODO: Service to switch between Channels
 
 
 ## Contributing
