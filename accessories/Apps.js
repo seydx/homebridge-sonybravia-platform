@@ -143,7 +143,7 @@ class APPS {
             .setCharacteristic(Characteristic.SerialNumber, "Sony-Apps")
             .setCharacteristic(Characteristic.FirmwareRevision, require('../package.json').version);
 
-        this.AppService = new Service.AppService(this.name + " Service");
+        //this.AppService = new Service.AppService(this.name + " Service");
         this.AppService = new Service.Switch(this.name);
 
         this.AppService.addCharacteristic(Characteristic.TargetApp);
