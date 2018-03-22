@@ -63,6 +63,7 @@ function SonyBraviaPlatform(log, config, api) {
     //Channels
     this.channelsEnabled = config["channelsEnabled"] || false;
     this.channelSource = config["channelSource"] || "tv:dvbt";
+    this.favChannel = config["favChannel"];
 
     //CECs
     this.cecs = config["cecs"];
@@ -204,7 +205,9 @@ SonyBraviaPlatform.prototype = {
                                         maxChannels: response.result[0].count - 1,
                                         port: self.port,
                                         interval: self.interval,
-                                        channelSource: self.channelSource
+                                        channelSource: self.channelSource,
+                                        homeapp: self.homeapp,
+                                        favChannel: self.favChannel
                                     }
 
                                     self.log("Found " + channelListConfig.maxChannels + " channels!")
