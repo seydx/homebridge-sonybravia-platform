@@ -1,4 +1,4 @@
-# homebridge-sonybravia-platform v2.0
+# homebridge-sonybravia-platform v2.1
 
 [![npm](https://img.shields.io/npm/v/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
 [![npm](https://img.shields.io/npm/dt/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
@@ -76,14 +76,21 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
 ```
 
 
-### Multiple TVs
+## Multiple TVs
 
 If you want to control multiple TVs , just add a second platform (see above), change the IP and PSK **and** give the platform an own unique "name".
 
 
-### Home APP
+## APPS
 
-Home App is an on the TV installed app that must be defined in the config.json file. Due to the reason that its not possible to **deactivate** a HDMI input, this App will start instead. So if you switch off HDMI, the input will change from HDMI to the Home App (_in my case it is an IPTV app_)
+This plugin expose a **Switch** that detects automatically all Apps from the TV. It will add new characteristic to the switch to control ***Home APP** and also all the other apps installed on the TV. With Elgato EVE App it is possible to create scenes to activate apps or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
+
+See [Images](https://github.com/SeydX/homebridge-sonybravia-platform/tree/master/images/) for more details.
+
+
+### *Home APP
+
+Home App is an on the TV installed app that can be defined in the config.json file. Due to the reason that its not possible to **deactivate** a HDMI input, this App will start instead. So if you switch off HDMI, the input will change from HDMI to the Home App (_in my case it is an IPTV app_)
 
 With the following command for terminal you will get list of apps that are installed on your TV (Change TVIPHERE, YOURPSKERE with your data, be sure that **jq** is installed, see above)
 
@@ -91,8 +98,28 @@ With the following command for terminal you will get list of apps that are insta
 
 Just search your app and copy the adress of the coosen app. This is an example adress of my IPTV: com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity
 
+If you dont set this in your config.json, the plugin will take the uri of the app in the first place (in most cases it is Play Store)
 
-### CEC Device
+
+## Channels
+
+This plugin expose a **Switch** that detects automatically all Channels from the TV. It will add new characteristic to the switch to control ***Favourite Channel** and also all the other channels. With Elgato EVE App it is possible to create scenes to activate channel or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
+
+See [Images](https://github.com/SeydX/homebridge-sonybravia-platform/tree/master/images/) for more details.
+
+
+### *Favourite Channel (favChannel)
+
+With the following command for terminal you will get your favourite channel (Change TVIPHERE, YOURPSKERE with your data, be sure that **jq** is installed, see above! NOTE: **"stIx"** is your channel number on the TV, BUT you need to substract with 1! i.e. Channel Numb on tv is 30, then **"stIx"** is 29!)
+
+- ```curl -XPOST http://TVIPHERE/sony/avContent -d '{"id":2,"method":"getContentList","version":"1.2","params":[{"source":"tv:dvbt","stIx":0}]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[][0]'```
+
+For your config.json you need the "uri" from output. i.e: **tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD**
+
+If you dont set this in your config.json, the plugin will take the first channel.
+
+
+## CEC Device
 
 If you want to control your CEC devices too, do following steps (it is important to get the logical adress! the "port" ist just the hdmi port where the device is plugged in! Dont forget to change TVIPHERE and YOURPSKERE with your data and be sure that **jq** is installed! See above):
 
@@ -103,25 +130,6 @@ If you want to control your CEC devices too, do following steps (it is important
 3. You will get a list of source inputs, search for your "CEC" device like Apple TV. The "port" and "logaddr" (needed for config.json) is in the adress line, in the list defined as **"uri"**, so if your "uri" is **"extInput:cec?type=player&port=3&logicalAddr=4"** then your **port is 3** and **logaddr is 4**, the "label" (also needed for config.json) is in the list defined as "title"
 
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
-
-
-## APPS
-
-This plugin creates a Service that detects automatically all Apps from the TV. With Elgato EVE App it is possible to create scenes to activate an certain app like Amazon or YouTube etc or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
-
-
-## Channels
-
-This plugin creates a Service that detects automatically all Channels from the TV. With Elgato EVE App it is possible to create scenes to activate channel or just switching between them. **Note:** Apple Home dont support this. The scenes must be created with Elagto Eve (tested) or other apps.
-
-
-### Favourite Channel (favChannel)
-
-With the following command for terminal you will get your favourite channel (Change TVIPHERE, YOURPSKERE with your data, be sure that **jq** is installed, see above! NOTE: **"stIx"** is your channel number on the TV, BUT you need to substract with 1! i.e. Channel Numb on tv is 30, then **"stIx"** is 29!)
-
-- ```curl -XPOST http://TVIPHERE/sony/avContent -d '{"id":2,"method":"getContentList","version":"1.2","params":[{"source":"tv:dvbt","stIx":0}]}' -H 'X-Auth-PSK: YOURPSKERE' | jq -r '.result[][0]'```
-
-For your config.json you need the "uri" from output. i.e: **tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD**
 
 
 ## Options
