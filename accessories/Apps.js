@@ -80,10 +80,10 @@ class APPS {
         this.setOffCount = 0;
         this.getCount = 0;
         this.homeapp = config.homeapp;
+        this.favappname = config.favappname;
 
         !this.appnr ? this.appnr = 0 : this.appnr;
         !this.appname ? this.appname = "" : this.appname;
-        !this.favappname ? this.favappname = "" : this.favappname;
         !this.state ? this.state = false : this.state;
 
         this.getContent = function(setPath, setMethod, setParams, setVersion) {
@@ -179,17 +179,13 @@ class APPS {
                 var response = JSON.parse(data);
 
                 var name = response.result[0];
-
-                if (!self.homeapp ||  self.homeapp == "") {
-                    this.log("No home app found in config. Setting home app to " + name[0].title)
-                    self.homeapp = name[0].uri;
-                    self.favappname = name[0].title;
-                } else {
-                    for (var i = 0; i < name.length; i++) {
-                        if (self.homeapp == name[i].uri) {
-                            self.favappname = name[i].title;
-                        }
-                    }
+                
+                if(!self.favappname){
+	                for (var i = 0; i < name.length; i++) {
+	                    if (self.homeapp == name[i].uri) {
+	                        self.favappname = name[i].title;
+	                    }
+	                }
                 }
 
                 self.log("Following, a list of all installed Apps on the TV. Have fun.");
@@ -201,10 +197,7 @@ class APPS {
 
             })
             .catch((err) => {
-                self.log("Can't show Application list! " + err + ". Try again...");
-                setTimeout(function() {
-                    self.getServices();
-                }, 15000)
+                self.log("Can't show Application list! Try with EVE");
             });
 
         this.getStates();
