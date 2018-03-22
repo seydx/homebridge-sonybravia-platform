@@ -7,7 +7,7 @@ var Accessory,
 
 class APPS {
 
-    constructor(log, config, api) {
+    constructor(log, config, api, apps) {
 
         Accessory = api.platformAccessory;
         Service = api.hap.Service;
@@ -78,9 +78,11 @@ class APPS {
         this.port = config.port;
         this.setOnCount = 0;
         this.setOffCount = 0;
+        this.setCount = 0;
         this.getCount = 0;
         this.homeapp = config.homeapp;
         this.favappname = config.favappname;
+        this.apps = apps;
 
         !this.appnr ? this.appnr = 0 : this.appnr;
         !this.appname ? this.appname = "" : this.appname;
@@ -173,33 +175,6 @@ class APPS {
             .updateValue(self.state)
             .on('set', this.setHomeApp.bind(this));
 
-        this.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
-            .then((data) => {
-
-                var response = JSON.parse(data);
-
-                var name = response.result[0];
-                
-                if(!self.favappname){
-	                for (var i = 0; i < name.length; i++) {
-	                    if (self.homeapp == name[i].uri) {
-	                        self.favappname = name[i].title;
-	                    }
-	                }
-                }
-
-                self.log("Following, a list of all installed Apps on the TV. Have fun.");
-                for (var i = 0; i < name.length; i++) {
-                    self.log(i + ": " + name[i].title);
-                }
-
-                self.AppService.getCharacteristic(Characteristic.FavouriteAppName).updateValue(self.favappname);
-
-            })
-            .catch((err) => {
-                self.log("Can't show Application list! Try with EVE");
-            });
-
         this.getStates();
 
         return [this.informationService, this.AppService];
@@ -226,7 +201,19 @@ class APPS {
                     self.state = false;
                 }
 
+                for (var i = 0; i <= self.apps.length; i++) {
+
+                    switch (i) {
+                        case self.appnr:
+                            self.appname = self.apps[i].title;
+                            break;
+                    }
+
+                }
+
                 self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
+                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
+                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
                 self.getCount = 0;
                 setTimeout(function() {
                     self.getStates();
@@ -235,40 +222,6 @@ class APPS {
             })
             .catch((err) => {
                 self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
-                if (self.getCount > 5) {
-                    self.log(self.name + ": " + err);
-                }
-                setTimeout(function() {
-                    self.getCount += 1;
-                    self.getStates();
-                }, 60000)
-            });
-
-        self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
-            .then((data) => {
-
-                var response = JSON.parse(data);
-
-                var name = response.result[0];
-
-                for (var i = 0; i <= name.length; i++) {
-
-                    switch (i) {
-                        case self.appnr:
-                            self.appname = name[i].title
-                            break;
-                    }
-
-                }
-
-                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
-                setTimeout(function() {
-                        self.getStates();
-                    }, 60 * 60 * 1000) //Checking all 60min for new Apps
-
-            })
-            .catch((err) => {
                 self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
                 self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
                 if (self.getCount > 5) {
@@ -321,53 +274,45 @@ class APPS {
     setTargetApp(value, callback) {
 
         var self = this;
-
         var uri;
 
-        self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+        for (var i = 0; i <= self.apps.length; i++) {
+
+            switch (i) {
+                case value:
+                    self.appname = self.apps[i].title;
+                    self.appnr = value;
+                    uri = self.apps[i].uri;
+                    break;
+            }
+
+        }
+
+        self.getContent("/sony/appControl", "setActiveApp", {
+                "uri": uri
+            }, "1.0")
             .then((data) => {
 
                 var response = JSON.parse(data);
 
-                var name = response.result[0];
-
-                for (var i = 0; i <= name.length; i++) {
-
-                    switch (i) {
-                        case value:
-                            self.appname = name[i].title;
-                            self.appnr = value;
-                            uri = name[i].uri;
-                            break;
-                    }
-
-                }
-
-                self.getContent("/sony/appControl", "setActiveApp", {
-                        "uri": uri
-                    }, "1.0")
-                    .then((data) => {
-
-                        var response = JSON.parse(data);
-
-                        self.log("Turn ON: " + self.appname);
-                        self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                        self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
-                        callback();
-
-                    })
-                    .catch((err) => {
-                        self.log(self.name + ": " + err);
-                        self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                        self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
-                        callback();
-                    });
+                self.log("Turn ON: " + self.appname);
+                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
+                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
+                self.setCount = 0;
+                callback();
 
             })
             .catch((err) => {
-                self.log(self.name + ": " + err);
-                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
+                if (self.setCount <= 5) {
+                    setTimeout(function() {
+                        self.setCount += 1;
+                    }, 3000)
+                    callback()
+                } else {
+                    self.log("Can't set App! " + err)
+                    callback()
+                }
+
             });
 
     }
