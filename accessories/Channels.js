@@ -46,7 +46,7 @@ class CHANNELS {
             this.setProps({
                 format: Characteristic.Formats.UINT8,
                 unit: Characteristic.Units.NONE,
-                maxValue: 999,
+                maxValue: 99999,
                 minValue: 0,
                 minStep: 1,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -72,6 +72,7 @@ class CHANNELS {
         this.homeapp = config.homeapp;
         this.favChannel = config.favChannel;
         this.favchannelname = config.favchannelname;
+        this.channelname = config.channelname;
 
         !this.channelnr ? this.channelnr = 0 : this.channelnr;
         !this.channelname ? this.channelname = "" : this.channelname;
@@ -164,12 +165,9 @@ class CHANNELS {
         return [this.informationService, this.Channels];
     }
 
-    getStates(minChannels) {
+    getStates() {
 
         var self = this;
-
-        self.channelnr = self.Channels.getCharacteristic(Characteristic.TargetChannel).value;
-        minChannels = self.channelnr;
 
         self.getContent("/sony/avContent", "getPlayingContentInfo", "1.0", "1.0")
             .then((data) => {
@@ -181,52 +179,22 @@ class CHANNELS {
                 } else {
                     if (response.result[0].source == "tv:dvbt" || response.result[0].source == "tv:dvbc") {
                         self.state = true;
+                        self.channelname = response.result[0].title;
+                        self.channelnr = parseInt(response.result[0].dispNum) - 1;
                     }
                 }
 
                 self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
-
-            })
-            .catch((err) => {
-                self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
-                if (self.getCount > 5) {
-                    self.log(self.name + ": " + err);
-                }
-                setTimeout(function() {
-                    self.getCount += 1;
-                    self.getStates();
-                }, 60000)
-            });
-
-        self.getContent("/sony/avContent", "getContentList", {
-                "source": self.channelSource,
-                "stIdx": minChannels
-            }, "1.2")
-            .then((data) => {
-
-                var response = JSON.parse(data);
-
-                var name = response.result[0];
-
-                for (var i = 0; i <= name.length; i++) {
-
-                    switch (i) {
-                        case 0:
-                            self.channelname = name[0].title;
-                            self.uri = name[0].uri;
-                            break;
-                    }
-
-                }
-
                 self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                 self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                self.getCount = 0;
                 setTimeout(function() {
                     self.getStates();
                 }, self.interval)
 
             })
             .catch((err) => {
+                self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                 self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                 self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                 if (self.getCount > 5) {
@@ -262,6 +230,8 @@ class CHANNELS {
                             self.channelname = name[0].title;
                             uri = name[0].uri;
                             self.channelnr = value;
+                            self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+                            self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                             break;
                     }
 
@@ -282,18 +252,12 @@ class CHANNELS {
                             self.state = true;
                         }
 
-                        self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                        self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                         self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                         callback()
 
                     })
                     .catch((err) => {
                         self.log(self.name + ": " + err);
-                        self.state = false;
-                        self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                        self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                        self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                         callback()
                     });
 
@@ -331,17 +295,17 @@ class CHANNELS {
                     }
 
                     self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(0);
+                    self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                     self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.favchannelname);
-                    self.setOffCount = 0;
+                    self.setOnCount = 0;
                     callback(null, self.state)
 
                 })
                 .catch((err) => {
-                    if (self.setOffCount <= 5) {
+                    if (self.setOnCount <= 5) {
                         self.state = false;
                         setTimeout(function() {
-                            self.setOffCount += 1;
+                            self.setOnCount += 1;
                             self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
                             self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                             self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
@@ -363,6 +327,7 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
+                        self.log(self.homeapp)
                         self.log("An Error occured. Try again. Error: " + JSON.stringify(response));
                         self.state = false;
                     } else {
@@ -370,7 +335,9 @@ class CHANNELS {
                         self.state = false;
                     }
 
-                    self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
+                    self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                    self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+                    self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                     self.setOffCount = 0;
                     callback(null, self.state)
 
@@ -381,6 +348,8 @@ class CHANNELS {
                         setTimeout(function() {
                             self.setOffCount += 1;
                             self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+                            self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                         }, 3000)
                         callback(null, self.state)
                     } else {
