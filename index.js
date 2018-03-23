@@ -121,6 +121,7 @@ function SonyBraviaPlatform(log, config, api) {
                         case 0:
                             platform.favChannel = name[0].uri;
                             platform.favchannelname = name[0].title;
+                            platform.channelname = name[0].title;
                             break;
                     }
 
@@ -134,6 +135,7 @@ function SonyBraviaPlatform(log, config, api) {
     } else {
         if (this.channelsEnabled && this.favChannel) {
             platform.favchannelname = platform.favChannel.split("Name=").pop();
+            platform.channelname = "";
         }
     }
 
@@ -249,7 +251,8 @@ SonyBraviaPlatform.prototype = {
                                         channelSource: self.channelSource,
                                         homeapp: self.homeapp,
                                         favChannel: self.favChannel,
-                                        favchannelname: self.favchannelname
+                                        favchannelname: self.favchannelname,
+                                        channelname: self.channelname
                                     }
 
                                     self.log("Found " + channelListConfig.maxChannels + " channels!")
