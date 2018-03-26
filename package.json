@@ -1,6 +1,6 @@
 {
   "name": "homebridge-sonybravia-platform",
-  "version": "2.2.4",
+  "version": "2.3.0",
   "description": "homebridge-sonybravia-platform",
   "main": "index.js",
   "devDependencies": {},
@@ -30,6 +30,7 @@
     "homebridge": ">=0.2.0"
   },
   "dependencies": {
-    "async": "*"
+    "async": "*",
+    "node-persist":"0.0.8"
   }
 }
