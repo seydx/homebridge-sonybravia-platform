@@ -93,7 +93,7 @@ class VOLUME {
 
         this.VolumeBulb.addCharacteristic(new Characteristic.Brightness())
             .setProps({
-                maxValue: self.maxVolume,
+                maxValue: 100,
                 minValue: 0,
                 minStep: 1
             })
@@ -261,6 +261,11 @@ class VOLUME {
     setVolume(value, callback) {
 
         var self = this;
+        
+        if(value > self.maxVolume){
+	        value = self.maxVolume
+        }
+         
         var newValue = value.toString();
 
         self.getContent("/sony/audio", "setAudioVolume", {
