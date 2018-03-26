@@ -32,7 +32,7 @@ function SonyBraviaPlatform(log, config, api) {
 
     //Base
     this.name = config["name"] || "Sony";
-    this.psk = config["psk"];
+    this.psk = encodeURIComponent(config["psk"]);
     if (!this.psk) throw new Error("PSK is required!");
     this.ipadress = config["ipadress"];
     if (!this.ipadress) throw new Error("IP Adress is required!");
@@ -42,6 +42,8 @@ function SonyBraviaPlatform(log, config, api) {
         this.log("Critical interval value! Setting interval to 10 seconds");
         this.interval = 10000;
     }
+    this.offState = config["offState"] || "HOME";
+    // Modes: HOME, CHANNEL, OFF
 
     //Volume
     this.volumeEnabled = config["volumeEnabled"] || true;
@@ -190,7 +192,10 @@ SonyBraviaPlatform.prototype = {
                                     port: self.port,
                                     interval: self.interval,
                                     homeapp: self.homeapp,
-                                    favappname: self.favappname
+                                    favappname: self.favappname,
+                                    offState: self.offState,
+                                    favChannel: self.favChannel,
+                                    channelSource: self.channelSource
                                 }
 
                                 var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api, result)
@@ -259,7 +264,10 @@ SonyBraviaPlatform.prototype = {
                                                 port: self.port,
                                                 interval: self.interval,
                                                 homeapp: self.homeapp,
-                                                favappname: self.favappname
+                                                favappname: self.favappname,
+                                                offState: self.offState,
+                                                favChannel: self.favChannel,
+                                                channelSource: self.channelSource
                                             }
 
                                             var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api, result)
@@ -401,7 +409,8 @@ SonyBraviaPlatform.prototype = {
                                             homeapp: self.homeapp,
                                             favChannel: self.favChannel,
                                             favchannelname: self.favchannelname,
-                                            channelname: self.channelname
+                                            channelname: self.channelname,
+                                            offState: self.offState
                                         }
 
                                         self.countchannels = channelListConfig.maxChannels;
@@ -453,7 +462,10 @@ SonyBraviaPlatform.prototype = {
                                     ipadress: self.ipadress,
                                     interval: self.interval,
                                     homeapp: self.homeapp,
-                                    port: self.port
+                                    port: self.port,
+                                    offState: self.offState,
+                                    favChannel: self.favChannel,
+                                    channelSource: self.channelSource
                                 }
 
                                 if (result[i].icon == "meta:hdmi") {
@@ -514,7 +526,10 @@ SonyBraviaPlatform.prototype = {
                                                 ipadress: self.ipadress,
                                                 interval: self.interval,
                                                 homeapp: self.homeapp,
-                                                port: self.port
+                                                port: self.port,
+                                                offState: self.offState,
+                                                favChannel: self.favChannel,
+                                                channelSource: self.channelSource
                                             }
 
                                             if (result[i].icon == "meta:hdmi") {
@@ -766,6 +781,9 @@ SonyBraviaPlatform.prototype = {
                                             interval: self.interval,
                                             homeapp: self.homeapp,
                                             port: self.port,
+                                            offState: self.offState,
+                                            favChannel: self.favChannel,
+                                            channelSource: self.channelSource
                                         }
 
                                         extraArray.push(extraConfig);
@@ -819,6 +837,9 @@ SonyBraviaPlatform.prototype = {
                                                         interval: self.interval,
                                                         homeapp: self.homeapp,
                                                         port: self.port,
+                                                        offState: self.offState,
+                                                        favChannel: self.favChannel,
+                                                        channelSource: self.channelSource
                                                     }
 
                                                     extraArray.push(extraConfig);
