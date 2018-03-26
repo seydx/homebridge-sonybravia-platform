@@ -104,15 +104,33 @@ class TVSWITCH {
             .then((data) => {
 
                 var response = JSON.parse(data);
-                var currentPower = response.result[0].status;
 
-                if (currentPower == "active") {
-                    self.state = true;
-                } else if (currentPower == "standby") {
-                    self.state = false;
+                if ("error" in response) {
+
+                    if (response.error[0] == 7 || response.error[0] == 40005) {
+                        self.log("TV OFF");
+                        self.state = false;
+                    } else if (response.error[0] == 3 || response.error[0] == 5) {
+                        self.log("Illegal argument!");
+                        self.state = false;
+                    } else {
+                        self.log("ERROR: " + JSON.stringify(response));
+                        self.state = false;
+                    }
+
                 } else {
-                    self.log("Could not determine TV status!")
-                    self.state = false;
+
+                    var currentPower = response.result[0].status;
+
+                    if (currentPower == "active") {
+                        self.state = true;
+                    } else if (currentPower == "standby") {
+                        self.state = false;
+                    } else {
+                        self.log("Could not determine TV status!")
+                        self.state = false;
+                    }
+
                 }
 
                 self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
@@ -148,8 +166,26 @@ class TVSWITCH {
 
                     var response = JSON.parse(data);
 
-                    self.log("Turning on the TV");
-                    self.state = true;
+                    if ("error" in response) {
+
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
+
+                    } else {
+
+                        self.log("Turning on the TV");
+                        self.state = true;
+
+                    }
+
                     self.setOnCount = 0;
                     self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
@@ -179,8 +215,26 @@ class TVSWITCH {
 
                     var response = JSON.parse(data);
 
-                    self.log("Turning off the TV");
-                    self.state = false;
+                    if ("error" in response) {
+
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = true;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = true;
+                        }
+
+                    } else {
+
+                        self.log("Turning off the TV");
+                        self.state = false;
+
+                    }
+
                     self.setOffCount = 0;
                     self.TVSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
