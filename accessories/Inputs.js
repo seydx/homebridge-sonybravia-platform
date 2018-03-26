@@ -478,6 +478,7 @@ class INPUTS {
                 self.log("Off State could not be detected. Please check your config file. Available modes are: HOME, CHANNEL and OFF!. Setting offState to HOME. Trying again...")
                 self.offState = "HOME";
                 self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
+                callback()
             }
 
         }
