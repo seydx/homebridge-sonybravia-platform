@@ -153,78 +153,131 @@ SonyBraviaPlatform.prototype = {
 
                             self.log("Getting apps...");
 
-                            self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
-                                .then((data) => {
+                            if (self.storage.getItem("Sony_Apps")) {
 
-                                    var response = JSON.parse(data);
+                                self.log("Apps found in storage.");
+                                self.log("Note: If you want to refresh the app list, please use the 'Applist' button in the EVE app or delete 'Sony_Apps' file in your persist folder!");
+                                var response = self.storage.getItem("Sony_Apps");
+                                var result = response.result[0];
+                                self.countapps = response.result[0].length;
 
-                                    if ("error" in response) {
+                                if (!self.homeapp && !self.storage.getItem("Sony_HomeApp")) {
+                                    self.log("No home app found in config and storage. Setting home app to " + result[0].title + ". The Home App can also be changed within the EVE app!");
+                                    self.homeapp = result[0].uri;
+                                    self.favappname = result[0].title;
+                                } else if (self.storage.getItem("Sony_HomeApp")) {
+                                    self.homeapp = self.storage.getItem("Sony_HomeApp");
+                                    for (var i = 0; i < result.length; i++) {
+                                        if (self.storage.getItem("Sony_HomeApp") == result[i].uri) {
+                                            self.favappname = result[i].title;
+                                        }
+                                    }
+                                    self.log("Home App found in storage. Home App is: " + self.favappname);
+                                } else {
+                                    for (var i = 0; i < result.length; i++) {
+                                        if (self.homeapp == result[i].uri) {
+                                            self.favappname = result[i].title;
+                                        }
+                                    }
+                                    self.log("Home App found in config. Home App is: " + self.favappname);
+                                }
 
-                                        self.log("An error occured by getting application list!");
+                                var appListConfig = {
+                                    name: self.name,
+                                    psk: self.psk,
+                                    ipadress: self.ipadress,
+                                    maxApps: response.result[0].length,
+                                    port: self.port,
+                                    interval: self.interval,
+                                    homeapp: self.homeapp,
+                                    favappname: self.favappname
+                                }
 
-                                        if (response.error[0] == 7 || response.error[0] == 40005) {
-                                            self.log("Please turn on the TV! Trying again...");
-                                        } else if (response.error[0] == 3 || response.error[0] == 5) {
-                                            self.log("Illegal argument!");
+                                var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api, result)
+                                accessoriesArray.push(appListAccessory);
+
+                                next();
+
+                            } else {
+
+                                self.log("No apps in storage. Start requesting.")
+
+                                self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+                                    .then((data) => {
+
+                                        var response = JSON.parse(data);
+
+                                        if ("error" in response) {
+
+                                            self.log("An error occured by getting application list!");
+
+                                            if (response.error[0] == 7 || response.error[0] == 40005) {
+                                                self.log("Please turn on the TV! Trying again...");
+                                            } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                                self.log("Illegal argument!");
+                                            } else {
+                                                self.log("ERROR: " + JSON.stringify(response));
+                                            }
+
+                                            setTimeout(function() {
+                                                fetchAppService(next);
+                                            }, 10000)
+
                                         } else {
-                                            self.log("ERROR: " + JSON.stringify(response));
+
+                                            var result = response.result[0];
+                                            self.countapps = response.result[0].length;
+                                            self.log("Caching apps.")
+                                            self.storage.setItem("Sony_Apps", response)
+
+                                            if (!self.homeapp && !self.storage.getItem("Sony_HomeApp")) {
+                                                self.log("No home app found in config and storage. Setting home app to " + result[0].title + ". The Home App can also be changed within the EVE app!");
+                                                self.homeapp = result[0].uri;
+                                                self.favappname = result[0].title;
+                                            } else if (self.storage.getItem("Sony_HomeApp")) {
+                                                self.homeapp = self.storage.getItem("Sony_HomeApp");
+                                                for (var i = 0; i < result.length; i++) {
+                                                    if (self.storage.getItem("Sony_HomeApp") == result[i].uri) {
+                                                        self.favappname = result[i].title;
+                                                    }
+                                                }
+                                                self.log("Home App found in storage. Home App is: " + self.favappname);
+                                            } else {
+                                                for (var i = 0; i < result.length; i++) {
+                                                    if (self.homeapp == result[i].uri) {
+                                                        self.favappname = result[i].title;
+                                                    }
+                                                }
+                                                self.log("Home App found in config. Home App is: " + self.favappname);
+                                            }
+
+                                            var appListConfig = {
+                                                name: self.name,
+                                                psk: self.psk,
+                                                ipadress: self.ipadress,
+                                                maxApps: response.result[0].length,
+                                                port: self.port,
+                                                interval: self.interval,
+                                                homeapp: self.homeapp,
+                                                favappname: self.favappname
+                                            }
+
+                                            var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api, result)
+                                            accessoriesArray.push(appListAccessory);
+
+                                            next();
+
                                         }
 
+                                    })
+                                    .catch((err) => {
+                                        self.log("Apps: " + err + " - Trying again");
                                         setTimeout(function() {
                                             fetchAppService(next);
                                         }, 10000)
+                                    });
 
-                                    } else {
-
-                                        var result = response.result[0];
-                                        self.countapps = response.result[0].length;
-
-                                        if (!self.homeapp && !self.storage.getItem("Sony_HomeApp")) {
-                                            self.log("No home app found in config and storage. Setting home app to " + result[0].title + ". The Home App can also be changed within the EVE app!");
-                                            self.homeapp = result[0].uri;
-                                            self.favappname = result[0].title;
-                                        } else if (self.storage.getItem("Sony_HomeApp")) {
-                                            self.homeapp = self.storage.getItem("Sony_HomeApp");
-                                            for (var i = 0; i < result.length; i++) {
-                                                if (self.storage.getItem("Sony_HomeApp") == result[i].uri) {
-                                                    self.favappname = result[i].title;
-                                                }
-                                            }
-                                            self.log("Home App found in storage. Home App is: " + self.favappname);
-                                        } else {
-                                            for (var i = 0; i < result.length; i++) {
-                                                if (self.homeapp == result[i].uri) {
-                                                    self.favappname = result[i].title;
-                                                }
-                                            }
-                                            self.log("Home App found in config. Home App is: " + self.favappname);
-                                        }
-
-                                        var appListConfig = {
-                                            name: self.name,
-                                            psk: self.psk,
-                                            ipadress: self.ipadress,
-                                            maxApps: response.result[0].length,
-                                            port: self.port,
-                                            interval: self.interval,
-                                            homeapp: self.homeapp,
-                                            favappname: self.favappname
-                                        }
-
-                                        var appListAccessory = new APP_Accessory(self.log, appListConfig, self.api, result)
-                                        accessoriesArray.push(appListAccessory);
-
-                                        next();
-
-                                    }
-
-                                })
-                                .catch((err) => {
-                                    self.log(err);
-                                    setTimeout(function() {
-                                        fetchAppService(next);
-                                    }, 10000)
-                                });
+                            }
 
                         } else {
                             next();
@@ -362,7 +415,7 @@ SonyBraviaPlatform.prototype = {
 
                                 })
                                 .catch((err) => {
-                                    self.log(err);
+                                    self.log("Channel: " + err + " - Trying again");
                                     setTimeout(function() {
                                         fetchChannels(next);
                                     }, 10000)
@@ -383,70 +436,115 @@ SonyBraviaPlatform.prototype = {
 
                         self.log("Getting inputs...")
 
-                        self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
-                            .then((data) => {
+                        if (self.storage.getItem("Sony_Inputs")) {
 
-                                var response = JSON.parse(data);
+                            self.log("HDMI inputs found in storage.");
 
-                                if ("error" in response) {
+                            var response = self.storage.getItem("Sony_Inputs");
+                            var result = response.result[0];
+                            self.counthdmi = 0;
+                            self.countcec = 0;
+                            var hdmiArray = []
 
-                                    self.log("An error occured by getting inputs!");
+                            for (var i = 0; i < result.length; i++) {
 
-                                    if (response.error[0] == 7 || response.error[0] == 40005) {
-                                        self.log("Please turn on the TV! Trying again...");
-                                    } else if (response.error[0] == 3 || response.error[0] == 5) {
-                                        self.log("Illegal argument!");
-                                    } else {
-                                        self.log("ERROR: " + JSON.stringify(response));
-                                    }
+                                var toConfig = {
+                                    psk: self.psk,
+                                    ipadress: self.ipadress,
+                                    interval: self.interval,
+                                    homeapp: self.homeapp,
+                                    port: self.port
+                                }
 
-                                    setTimeout(function() {
-                                        fetchSources(next);
-                                    }, 10000)
+                                if (result[i].icon == "meta:hdmi") {
 
-                                } else {
+                                    self.counthdmi += 1;
 
-                                    var result = response.result[0];
-                                    self.counthdmi = 0;
-                                    self.countcec = 0;
-                                    var hdmiArray = []
+                                    toConfig["name"] = self.name + " " + result[i].title;
+                                    toConfig["title"] = result[i].title;
+                                    toConfig["uri"] = result[i].uri;
+                                    toConfig["meta"] = result[i].icon;
 
-                                    for (var i = 0; i < result.length; i++) {
-
-                                        var toConfig = {
-                                            psk: self.psk,
-                                            ipadress: self.ipadress,
-                                            interval: self.interval,
-                                            homeapp: self.homeapp,
-                                            port: self.port
-                                        }
-
-                                        if (result[i].icon == "meta:hdmi") {
-
-                                            self.counthdmi += 1;
-
-                                            toConfig["name"] = self.name + " " + result[i].title;
-                                            toConfig["title"] = result[i].title;
-                                            toConfig["uri"] = result[i].uri;
-                                            toConfig["meta"] = result[i].icon;
-
-                                            hdmiArray.push(toConfig);
-
-                                        }
-
-                                    }
-
-                                    next(null, hdmiArray)
+                                    hdmiArray.push(toConfig);
 
                                 }
 
-                            })
-                            .catch((err) => {
-                                self.log("Inputs: " + err + " - Trying again");
-                                setTimeout(function() {
-                                    fetchSources(next);
-                                }, 10000)
-                            });
+                            }
+
+                            next(null, hdmiArray)
+
+                        } else {
+
+                            self.log("No HDMI inputs in storage. Start requesting.")
+
+                            self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                                .then((data) => {
+
+                                    var response = JSON.parse(data);
+
+                                    if ("error" in response) {
+
+                                        self.log("An error occured by getting inputs!");
+
+                                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                                            self.log("Please turn on the TV! Trying again...");
+                                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                            self.log("Illegal argument!");
+                                        } else {
+                                            self.log("ERROR: " + JSON.stringify(response));
+                                        }
+
+                                        setTimeout(function() {
+                                            fetchSources(next);
+                                        }, 10000)
+
+                                    } else {
+
+                                        var result = response.result[0];
+                                        self.log("Caching HDMI inputs.")
+                                        self.storage.setItem("Sony_Inputs", response)
+                                        self.counthdmi = 0;
+                                        self.countcec = 0;
+                                        var hdmiArray = []
+
+                                        for (var i = 0; i < result.length; i++) {
+
+                                            var toConfig = {
+                                                psk: self.psk,
+                                                ipadress: self.ipadress,
+                                                interval: self.interval,
+                                                homeapp: self.homeapp,
+                                                port: self.port
+                                            }
+
+                                            if (result[i].icon == "meta:hdmi") {
+
+                                                self.counthdmi += 1;
+
+                                                toConfig["name"] = self.name + " " + result[i].title;
+                                                toConfig["title"] = result[i].title;
+                                                toConfig["uri"] = result[i].uri;
+                                                toConfig["meta"] = result[i].icon;
+
+                                                hdmiArray.push(toConfig);
+
+                                            }
+
+                                        }
+
+                                        next(null, hdmiArray)
+
+                                    }
+
+                                })
+                                .catch((err) => {
+                                    self.log("Inputs: " + err + " - Trying again");
+                                    setTimeout(function() {
+                                        fetchSources(next);
+                                    }, 10000)
+                                });
+
+                        }
 
                     }
                     fetchSources(next)
@@ -460,110 +558,156 @@ SonyBraviaPlatform.prototype = {
 
                             self.log("CEC detection is enabled.")
 
-                            self.getContent("/sony/system", "getPowerStatus", "1.0", "1.0")
-                                .then((tvdata) => {
-                                    var tvresponse = JSON.parse(tvdata);
-                                    if ("error" in tvresponse) {
-                                        self.log("CEC: An error occured by getting TV state");
-                                        if (response.error[0] == 7 || response.error[0] == 40005) {
-                                            self.log("Please turn on the TV! Trying again...");
-                                        } else if (response.error[0] == 3 || response.error[0] == 5) {
-                                            self.log("Illegal argument!");
+                            if (self.storage.getItem("Sony_CEC")) {
+
+                                self.log("CEC devices found in storage.");
+                                var response = self.storage.getItem("Sony_CEC");
+                                var result = response.result[0];
+
+                                for (var i = 0; i < result.length; i++) {
+
+                                    if (result[i].icon == "meta:playbackdevice") {
+
+                                        self.countcec += 1;
+
+                                        var uri = result[i].uri;
+
+                                        if (uri.match("logicalAddr")) {
+                                            var port = uri.split("port=")[1].split("&logicalAddr=")[0];
                                         } else {
-                                            self.log("ERROR: " + JSON.stringify(tvresponse));
+                                            var port = uri.split("port=")[1];
                                         }
-                                    } else {
-                                        var status = tvresponse.result[0].status;
-                                        if (status == "active") {
 
-                                            self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
-                                                .then((data) => {
+                                        var newuri = "extInput:hdmi?port=" + port;
 
-                                                    var response = JSON.parse(data);
+                                        for (var j = 0; j < hdmiArray.length; j++) {
 
-                                                    if ("error" in response) {
+                                            if (hdmiArray[j].uri == newuri) {
+                                                hdmiArray[j].name = self.name + " " + result[i].title;
+                                                hdmiArray[j].title = result[i].title;
+                                                hdmiArray[j].uri = result[i].uri;
+                                                hdmiArray[j].meta = result[i].icon;
+                                            }
 
-                                                        self.log("An error occured by getting cec inputs!");
+                                        }
 
-                                                        if (response.error[0] == 7 || response.error[0] == 40005) {
-                                                            self.log("Please turn on the TV! Trying again...");
-                                                        } else if (response.error[0] == 3 || response.error[0] == 5) {
-                                                            self.log("Illegal argument!");
+                                    }
+
+                                }
+                                next(null, hdmiArray)
+
+                            } else {
+
+                                self.log("No CEC devices in storage. Start requesting.")
+
+                                self.getContent("/sony/system", "getPowerStatus", "1.0", "1.0")
+                                    .then((tvdata) => {
+                                        var tvresponse = JSON.parse(tvdata);
+                                        if ("error" in tvresponse) {
+                                            self.log("CEC: An error occured by getting TV state");
+                                            if (response.error[0] == 7 || response.error[0] == 40005) {
+                                                self.log("Please turn on the TV! Trying again...");
+                                            } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                                self.log("Illegal argument!");
+                                            } else {
+                                                self.log("ERROR: " + JSON.stringify(tvresponse));
+                                            }
+                                        } else {
+                                            var status = tvresponse.result[0].status;
+                                            if (status == "active") {
+
+                                                self.log("TV is ON. Getting CEC devices...");
+
+                                                self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                                                    .then((data) => {
+
+                                                        var response = JSON.parse(data);
+
+                                                        if ("error" in response) {
+
+                                                            self.log("An error occured by getting cec inputs!");
+
+                                                            if (response.error[0] == 7 || response.error[0] == 40005) {
+                                                                self.log("Please turn on the TV! Trying again...");
+                                                            } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                                                self.log("Illegal argument!");
+                                                            } else {
+                                                                self.log("ERROR: " + JSON.stringify(response));
+                                                            }
+
+                                                            setTimeout(function() {
+                                                                fetchCEC(next);
+                                                            }, 10000)
+
                                                         } else {
-                                                            self.log("ERROR: " + JSON.stringify(response));
-                                                        }
 
-                                                        setTimeout(function() {
-                                                            fetchCEC(next);
-                                                        }, 10000)
+                                                            var result = response.result[0];
+                                                            self.log("Caching CEC devices.")
+                                                            self.storage.setItem("Sony_CEC", response)
 
-                                                    } else {
+                                                            for (var i = 0; i < result.length; i++) {
 
-                                                        self.log("TV is ON. Getting CEC devices...");
+                                                                if (result[i].icon == "meta:playbackdevice") {
 
-                                                        var result = response.result[0];
+                                                                    self.countcec += 1;
 
-                                                        for (var i = 0; i < result.length; i++) {
+                                                                    var uri = result[i].uri;
 
-                                                            if (result[i].icon == "meta:playbackdevice") {
+                                                                    if (uri.match("logicalAddr")) {
+                                                                        var port = uri.split("port=")[1].split("&logicalAddr=")[0];
+                                                                    } else {
+                                                                        var port = uri.split("port=")[1];
+                                                                    }
 
-                                                                self.countcec += 1;
+                                                                    var newuri = "extInput:hdmi?port=" + port;
 
-                                                                var uri = result[i].uri;
+                                                                    for (var j = 0; j < hdmiArray.length; j++) {
 
-                                                                if (uri.match("logicalAddr")) {
-                                                                    var port = uri.split("port=")[1].split("&logicalAddr=")[0];
-                                                                } else {
-                                                                    var port = uri.split("port=")[1];
-                                                                }
+                                                                        if (hdmiArray[j].uri == newuri) {
+                                                                            hdmiArray[j].name = self.name + " " + result[i].title;
+                                                                            hdmiArray[j].title = result[i].title;
+                                                                            hdmiArray[j].uri = result[i].uri;
+                                                                            hdmiArray[j].meta = result[i].icon;
+                                                                        }
 
-                                                                var newuri = "extInput:hdmi?port=" + port;
-
-                                                                for (var j = 0; j < hdmiArray.length; j++) {
-
-                                                                    if (hdmiArray[j].uri == newuri) {
-                                                                        hdmiArray[j].name = self.name + " " + result[i].title;
-                                                                        hdmiArray[j].title = result[i].title;
-                                                                        hdmiArray[j].uri = result[i].uri;
-                                                                        hdmiArray[j].meta = result[i].icon;
                                                                     }
 
                                                                 }
 
                                                             }
+                                                            next(null, hdmiArray)
 
                                                         }
-                                                        next(null, hdmiArray)
 
-                                                    }
+                                                    })
+                                                    .catch((err) => {
+                                                        self.log("CEC: " + err + " - Trying again");
+                                                        setTimeout(function() {
+                                                            fetchCEC(next);
+                                                        }, 10000)
+                                                    });
 
-                                                })
-                                                .catch((err) => {
-                                                    self.log("CEC: " + err + " - Trying again");
-                                                    setTimeout(function() {
-                                                        fetchCEC(next);
-                                                    }, 10000)
-                                                });
-
-                                        } else if (status == "standby") {
-                                            self.log("TV seems to be off. TV needs to be turned on for getting CEC devices! Trying again...");
-                                            setTimeout(function() {
-                                                fetchCEC(next);
-                                            }, 10000)
-                                        } else {
-                                            self.log("CEC: An error occured by getting TV state. Error: " + JSON.stringify(tvresponse));
-                                            setTimeout(function() {
-                                                fetchCEC(next);
-                                            }, 10000)
+                                            } else if (status == "standby") {
+                                                self.log("TV seems to be off. TV needs to be turned on for getting CEC devices! Trying again...");
+                                                setTimeout(function() {
+                                                    fetchCEC(next);
+                                                }, 10000)
+                                            } else {
+                                                self.log("CEC: An error occured by getting TV state. Error: " + JSON.stringify(tvresponse));
+                                                setTimeout(function() {
+                                                    fetchCEC(next);
+                                                }, 10000)
+                                            }
                                         }
-                                    }
-                                })
-                                .catch((tverr) => {
-                                    self.log("CEC TV state: " + tverr + " - Trying again");
-                                    setTimeout(function() {
-                                        fetchCEC(next);
-                                    }, 10000)
-                                });
+                                    })
+                                    .catch((tverr) => {
+                                        self.log("CEC TV state: " + tverr + " - Trying again");
+                                        setTimeout(function() {
+                                            fetchCEC(next);
+                                        }, 10000)
+                                    });
+
+                            }
 
                         } else {
                             self.log("CEC detection is not enabled. Skipping discovery.")
@@ -600,64 +744,101 @@ SonyBraviaPlatform.prototype = {
 
                             self.log("Getting extra inputs...")
 
-                            self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
-                                .then((data) => {
+                            if (self.storage.getItem("Sony_Inputs")) {
 
-                                    var response = JSON.parse(data);
+                                self.log("Extra inputs found in storage.");
 
-                                    if ("error" in response) {
+                                var response = self.storage.getItem("Sony_Inputs");
+                                var result = response.result[0];
+                                var extraArray = []
 
-                                        self.log("An error occured by getting extra inputs!");
+                                for (var i = 0; i < result.length; i++) {
+                                    if (result[i].icon == "meta:scart" || result[i].icon == "meta:composite" || result[i].icon == "meta:wifidisplay") {
 
-                                        if (response.error[0] == 7 || response.error[0] == 40005) {
-                                            self.log("Please turn on the TV! Trying again...");
-                                        } else if (response.error[0] == 3 || response.error[0] == 5) {
-                                            self.log("Illegal argument!");
-                                        } else {
-                                            self.log("ERROR: " + JSON.stringify(response));
+                                        self.countextras += 1;
+
+                                        var extraConfig = {
+                                            uri: result[i].uri,
+                                            extraname: result[i].title,
+                                            name: self.name,
+                                            psk: self.psk,
+                                            ipadress: self.ipadress,
+                                            interval: self.interval,
+                                            homeapp: self.homeapp,
+                                            port: self.port,
                                         }
 
+                                        extraArray.push(extraConfig);
+
+                                    }
+                                }
+
+                                next(null, extraArray)
+
+                            } else {
+
+                                self.log("No extra inputs in storage. Start requesting.")
+
+                                self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                                    .then((data) => {
+
+                                        var response = JSON.parse(data);
+
+                                        if ("error" in response) {
+
+                                            self.log("An error occured by getting extra inputs!");
+
+                                            if (response.error[0] == 7 || response.error[0] == 40005) {
+                                                self.log("Please turn on the TV! Trying again...");
+                                            } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                                self.log("Illegal argument!");
+                                            } else {
+                                                self.log("ERROR: " + JSON.stringify(response));
+                                            }
+
+                                            setTimeout(function() {
+                                                fetchExtras(next);
+                                            }, 10000)
+
+                                        } else {
+
+                                            var result = response.result[0];
+                                            var extraArray = []
+
+                                            for (var i = 0; i < result.length; i++) {
+                                                if (result[i].icon == "meta:scart" || result[i].icon == "meta:composite" || result[i].icon == "meta:wifidisplay") {
+
+                                                    self.countextras += 1;
+
+                                                    var extraConfig = {
+                                                        uri: result[i].uri,
+                                                        extraname: result[i].title,
+                                                        name: self.name,
+                                                        psk: self.psk,
+                                                        ipadress: self.ipadress,
+                                                        interval: self.interval,
+                                                        homeapp: self.homeapp,
+                                                        port: self.port,
+                                                    }
+
+                                                    extraArray.push(extraConfig);
+
+                                                }
+                                            }
+
+                                            next(null, extraArray)
+
+                                        }
+
+                                    })
+                                    .catch((err) => {
+                                        self.log("Extra Inputs: " + err + " - Trying again");
                                         setTimeout(function() {
                                             fetchExtras(next);
                                         }, 10000)
+                                    });
 
-                                    } else {
-
-                                        var result = response.result[0];
-                                        var extraArray = []
-
-                                        for (var i = 0; i < result.length; i++) {
-                                            if (result[i].icon == "meta:scart" || result[i].icon == "meta:composite" || result[i].icon == "meta:wifidisplay") {
-
-                                                self.countextras += 1;
-
-                                                var extraConfig = {
-                                                    uri: result[i].uri,
-                                                    extraname: result[i].title,
-                                                    name: self.name,
-                                                    psk: self.psk,
-                                                    ipadress: self.ipadress,
-                                                    interval: self.interval,
-                                                    homeapp: self.homeapp,
-                                                    port: self.port,
-                                                }
-
-                                                extraArray.push(extraConfig);
-
-                                            }
-                                        }
-
-                                        next(null, extraArray)
-
-                                    }
-
-                                })
-                                .catch((err) => {
-                                    self.log(err);
-                                    setTimeout(function() {
-                                        fetchExtras(next);
-                                    }, 10000)
-                                });
+                            }
 
                         } else {
                             var extraArray;
