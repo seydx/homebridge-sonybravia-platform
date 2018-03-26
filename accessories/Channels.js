@@ -198,7 +198,6 @@ class CHANNELS {
 
                 if ("error" in response) {
                     if (response.error[0] == 7 || response.error[0] == 40005) {
-                        self.log("TV OFF");
                         self.state = false;
                     } else if (response.error[0] == 3 || response.error[0] == 5) {
                         self.log("Illegal argument!");
