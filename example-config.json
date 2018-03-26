@@ -18,20 +18,9 @@
   "appsEnabled":true,
   "volumeEnabled":true,
   "channelsEnabled":true,
+  "detectCEC":true,
   "favChannel":"tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD",
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
-  "cecs":[
-   {
-    "label":"Apple TV",
-    "logaddr":8,
-    "port":2
-   },
-   {
-    "label":"PlayStation 4",
-    "logaddr":4,
-    "port":3
-   }
-  ]
  }
  ]
 }
