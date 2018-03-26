@@ -15,34 +15,37 @@ class INPUTS {
         var platform = this;
 
         this.log = log;
-        this.hdminame = config.hdminame
-        this.name = config.name + " " + this.hdminame;
-        this.psk = config.psk;
-        this.ipadress = config.ipadress;
-        this.interval = config.interval;
+        this.name = config.name;
+        this.title = config.title;
         this.uri = config.uri;
-        this.homeapp = config.homeapp;
-        this.hdmiuri = config.uri;
+        this.meta = config.meta;
+        this.ipadress = config.ipadress;
         this.port = config.port;
-        this.formatname = config.hdminame.split("/")[0];
+        this.psk = config.psk;
+        this.interval = config.interval;
+        this.homeapp = config.homeapp;
+
         this.setOnCount = 0;
         this.setOffCount = 0;
         this.getCount = 0;
 
         !this.state ? this.state = false : this.state;
 
-        if (config.cecname) {
-            this.cecport = config.cecport;
-            this.ceclogaddr = config.ceclogaddr;
+        if (this.meta == "meta:playbackdevice") {
 
-            this.cecname = config.cecname;
-            this.name = config.name + " " + config.cecname;
-            this.formatname = config.cecname.split("/")[0];
-            this.hdminame = "HDMI " + config.cecport;
+            if (this.uri.match("logicalAddr")) {
+                var port = this.uri.split("port=")[1].split("&logicalAddr=")[0];
+            } else {
+                var port = this.uri.split("port=")[1];
+            }
 
-            this.hdmiuri = "extInput:hdmi?port=" + config.cecport;
-            this.cecuri = config.cecuri;
-            this.uri = config.cecuri;
+            //this.logaddr = this.uri.split("port=")[1].split("&logicalAddr=")[1];
+            this.simpleuri = "extInput:hdmi?port=" + port;
+
+        } else {
+
+            this.simpleuri = this.uri;
+
         }
 
         this.getContent = function(setPath, setMethod, setParams, setVersion) {
@@ -124,7 +127,7 @@ class INPUTS {
 
                 if ("result" in response) {
 
-                    if (response.result[0].uri == self.hdmiuri || response.result[0].uri == self.cecuri) {
+                    if (response.result[0].uri == self.uri || response.result[0].uri == self.simpleuri) {
                         self.state = true;
                     } else {
                         self.state = false;
@@ -169,22 +172,34 @@ class INPUTS {
 
                     if ("error" in response) {
 
-                        self.getContent("/sony/system", "setPowerStatus", {
-                                "status": true
-                            }, "1.0")
-                            .then((data) => {
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
 
-                                self.log("Turning on the TV...");
-                                self.state = true;
-                                this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.getContent("/sony/system", "setPowerStatus", {
+                                    "status": true
+                                }, "1.0")
+                                .then((data) => {
 
-                            })
-                            .catch((err) => {
-                                self.log(self.name + ": " + err + " Try setting again...");
-                                self.state = true;
-                                this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
-                                callback(null, self.state)
-                            });
+                                    self.log("Turning on the TV...");
+                                    self.state = true;
+                                    setTimeout(function() {
+                                        this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    }, 2000)
+
+                                })
+                                .catch((err) => {
+                                    self.log(self.name + ": " + err + " Try setting again...");
+                                    self.state = true;
+                                    this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    callback(null, self.state)
+                                });
+
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
 
                     } else {
                         self.setOnCount = 0;
@@ -207,6 +222,7 @@ class INPUTS {
                     } else {
                         self.state = false;
                         self.log("Can't set " + self.name + " on! " + err)
+                        self.setOnCount = 0
                         callback(null, self.state)
                     }
                 });
@@ -221,8 +237,16 @@ class INPUTS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("TV OFF");
-                        self.state = false;
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = true;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = true;
+                        }
                     } else {
                         self.log("Switch to Home App")
                         self.state = false;
@@ -244,6 +268,7 @@ class INPUTS {
                     } else {
                         self.state = true;
                         self.log("Can't set " + self.name + " off! " + err)
+                        self.setOffCount = 0
                         callback(null, self.state)
                     }
                 });
