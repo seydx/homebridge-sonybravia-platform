@@ -408,7 +408,7 @@ class CHANNELS {
 
         } else {
 
-            if (self.offState = "HOME") {
+            if (self.offState == "HOME") {
 
                 if (!self.homeapp) {
                     self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
@@ -493,11 +493,11 @@ class CHANNELS {
                             }
                         });
                 }
-            } else if (self.offState = "CHANNEL") {
+            } else if (self.offState == "CHANNEL") {
                 self.log("Currently active source is Channel. Detected offState is CHANNEL. Setting offState to HOME");
                 self.offState = "HOME";
                 self.Channels.getCharacteristic(Characteristic.On).setValue(false);
-            } else if (self.offState = "OFF") {
+            } else if (self.offState == "OFF") {
                 self.getContent("/sony/system", "setPowerStatus", {
                         "status": false
                     }, "1.0")
