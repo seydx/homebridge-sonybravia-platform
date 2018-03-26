@@ -89,7 +89,7 @@ class EXTRAINPUTS {
         this.ExtraSourceSwitch = new Service.Switch(this.name);
 
         this.ExtraSourceSwitch.getCharacteristic(Characteristic.On)
-            .updateValue(self.state)
+            .updateValue(this.state)
             .on('set', this.setExtraSourceSwitch.bind(this));
 
         this.getStates();
@@ -152,22 +152,34 @@ class EXTRAINPUTS {
 
                     if ("error" in response) {
 
-                        self.getContent("/sony/system", "setPowerStatus", {
-                                "status": true
-                            }, "1.0")
-                            .then((data) => {
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
 
-                                self.log("Turning on the TV...");
-                                self.state = true;
-                                this.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.getContent("/sony/system", "setPowerStatus", {
+                                    "status": true
+                                }, "1.0")
+                                .then((data) => {
 
-                            })
-                            .catch((err) => {
-                                self.log(self.name + ": " + err);
-                                self.state = false;
-                                self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).updateValue(self.state);
-                                callback(null, self.state)
-                            });
+                                    self.log("Turning on the TV...");
+                                    self.state = true;
+                                    setTimeout(function() {
+                                        this.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    }, 2000)
+
+                                })
+                                .catch((err) => {
+                                    self.log(self.name + ": " + err + " Try setting again...");
+                                    self.state = true;
+                                    this.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    callback(null, self.state)
+                                });
+
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
 
                     } else {
                         self.log("Turn ON: " + self.name);
@@ -204,8 +216,16 @@ class EXTRAINPUTS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("TV OFF");
-                        self.state = false;
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = true;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = true;
+                        }
                     } else {
                         self.log("Switch to Home App")
                         self.state = false;
