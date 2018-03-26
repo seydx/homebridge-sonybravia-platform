@@ -84,6 +84,7 @@ class CHANNELS {
         this.favChannel = config.favChannel;
         this.favchannelname = config.favchannelname;
         this.channelname = config.channelname;
+        this.offState = config.offState;
 
         !this.channelnr ? this.channelnr = 0 : this.channelnr;
         !this.channelname ? this.channelname = "" : this.channelname;
@@ -406,52 +407,150 @@ class CHANNELS {
                 });
 
         } else {
-            self.getContent("/sony/appControl", "setActiveApp", {
-                    "uri": self.homeapp
-                }, "1.0")
-                .then((data) => {
 
-                    var response = JSON.parse(data);
+            if (self.offState = "HOME") {
 
-                    if ("error" in response) {
-                        if (response.error[0] == 7 || response.error[0] == 40005) {
-                            self.log("TV OFF");
-                            self.state = false;
-                        } else if (response.error[0] == 3 || response.error[0] == 5) {
-                            self.log("Illegal argument!");
-                            self.state = true;
-                        } else {
-                            self.log("ERROR: " + JSON.stringify(response));
-                            self.state = true;
-                        }
-                    } else {
-                        self.log("Switch to Home App")
-                        self.state = false;
-                    }
+                if (!self.homeapp) {
+                    self.getContent("/sony/appControl", "getApplicationList", "1.0", "1.0")
+                        .then((data) => {
 
-                    self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
-                    self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                    self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                    self.setOffCount = 0;
-                    callback(null, self.state)
+                            var response = JSON.parse(data);
 
-                })
-                .catch((err) => {
-                    if (self.setOffCount <= 5) {
-                        self.state = false;
-                        setTimeout(function() {
-                            self.setOffCount += 1;
+                            if ("error" in response) {
+
+                                self.log("An error occured by setting home app!");
+
+                                if (response.error[0] == 7 || response.error[0] == 40005) {
+                                    self.log("Please turn on the TV! Trying again...");
+                                } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                    self.log("Illegal argument!");
+                                } else {
+                                    self.log("ERROR: " + JSON.stringify(response));
+                                }
+
+                                setTimeout(function() {
+                                    self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
+                                }, 10000)
+
+                            } else {
+
+                                var result = response.result[0];
+                                self.homeapp = result[0].uri;
+
+                                self.Channels.getCharacteristic(Characteristic.On).setValue(false);
+                                callback()
+
+                            }
+
+                        })
+                        .catch((err) => {
+                            self.log("Apps: " + err + " - Trying again");
+                            setTimeout(function() {
+                                self.Channels.getCharacteristic(Characteristic.On).setValue(false);
+                            }, 10000)
+                        });
+                } else {
+                    self.getContent("/sony/appControl", "setActiveApp", {
+                            "uri": self.homeapp
+                        }, "1.0")
+                        .then((data) => {
+
+                            var response = JSON.parse(data);
+
+                            if ("error" in response) {
+                                if (response.error[0] == 7 || response.error[0] == 40005) {
+                                    self.log("TV OFF");
+                                    self.state = false;
+                                } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                    self.log("Illegal argument!");
+                                    self.state = true;
+                                } else {
+                                    self.log("ERROR: " + JSON.stringify(response));
+                                    self.state = true;
+                                }
+                            } else {
+                                self.log("Switch to Home App")
+                                self.state = false;
+                            }
+
                             self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
-                            self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                            self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                        }, 3000)
+                            self.setOffCount = 0;
+                            callback(null, self.state)
+
+                        })
+                        .catch((err) => {
+                            if (self.setOffCount <= 5) {
+                                self.state = false;
+                                setTimeout(function() {
+                                    self.setOffCount += 1;
+                                    self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
+                                }, 3000)
+                                callback(null, self.state)
+                            } else {
+                                self.state = true;
+                                self.log("Can't set " + self.name + " off! " + err)
+                                callback(null, self.state)
+                            }
+                        });
+                }
+            } else if (self.offState = "CHANNEL") {
+                self.log("Currently active source is Channel. Detected offState is CHANNEL. Setting offState to HOME");
+                self.offState = "HOME";
+                self.Channels.getCharacteristic(Characteristic.On).setValue(false);
+            } else if (self.offState = "OFF") {
+                self.getContent("/sony/system", "setPowerStatus", {
+                        "status": false
+                    }, "1.0")
+                    .then((data) => {
+
+                        var response = JSON.parse(data);
+
+                        if ("error" in response) {
+
+                            if (response.error[0] == 7 || response.error[0] == 40005) {
+                                self.log("TV OFF");
+                                self.state = false;
+                            } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                self.log("Illegal argument!");
+                                self.state = true;
+                            } else {
+                                self.log("ERROR: " + JSON.stringify(response));
+                                self.state = true;
+                            }
+
+                        } else {
+
+                            self.log("Turning off the TV");
+                            self.state = false;
+
+                        }
+
+                        self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
+                        self.setOffCount = 0;
                         callback(null, self.state)
-                    } else {
-                        self.state = true;
-                        self.log("Can't set " + self.name + " off! " + err)
-                        callback(null, self.state)
-                    }
-                });
+
+                    })
+                    .catch((err) => {
+                        if (self.setOffCount <= 5) {
+                            self.state = false;
+                            setTimeout(function() {
+                                self.setOffCount += 1;
+                                self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                            }, 3000)
+                            callback(null, self.state)
+                        } else {
+                            self.state = true;
+                            self.log("Can't set " + self.name + " off! " + err)
+                            self.setOffCount = 0
+                            callback(null, self.state)
+                        }
+                    });
+            } else {
+                self.log("Off State could not be detected. Please check your config file. Available modes are: HOME, CHANNEL and OFF!. Setting offState to HOME. Trying again...")
+                self.offState = "HOME";
+                self.Channels.getCharacteristic(Characteristic.On).setValue(false);
+            }
+
         }
 
     }
