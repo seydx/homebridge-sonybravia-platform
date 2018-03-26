@@ -1,4 +1,4 @@
-# homebridge-sonybravia-platform v2.3
+# homebridge-sonybravia-platform v2.4
 
 [![npm](https://img.shields.io/npm/v/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
 [![npm](https://img.shields.io/npm/dt/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
@@ -77,6 +77,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "appsEnabled": true,
   "channelsEnabled":false,
   "detectCEC":true,
+  "offState": "HOME"
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "favChannel":"tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD"
  }
@@ -99,7 +100,7 @@ See [Images](https://github.com/SeydX/homebridge-sonybravia-platform/tree/master
 
 ### *Home APP
 
-Home App is an on the TV installed app that **can** be defined in the config.json file _(in **v2.3** you are also able to set the Home App within the app!)_. Due to the reason that its not possible to **deactivate / shut down** a HDMI input, this App will start instead. So if you switch off HDMI, the input will change from HDMI to the Home App (_in my case it is an IPTV app_)
+Home App is an on the TV installed app that **can** be defined in the config.json file _(in **v2.3** you are also able to set the Home App within the app!)_. 
 
 With the following command for terminal you will get a list of apps that are installed on your TV (Change TVIPHERE, YOURPSKERE with your data, be sure that **jq** is installed, see above)
 
@@ -127,6 +128,10 @@ For your config.json you need the "uri" from output. i.e: **tv:dvbt?trip=1.1051.
 
 If you dont set this in your config.json, the plugin will look for any cached favourite channels, if there is nothing, it will take the first channel
 
+## OFFSTATE
+Due to the reason that its not possible to **deactivate / shut down** a HDMI input, CEC device etc., this option give you the possibility to set your own off command. There are 3 Modes: "HOME" for starting the home app, "CHANNEL" for switching to youor favourite channel and "OFF" for turning off the TV.
+
+
 ## CEC Device
 
 In **v2.3** it's not necessary to do complicated steps to get a list of your cec devices. If you want to expose your CEC devices like Apple TV or PlayStation 4 just put **"detectCEC":true** in your config.json and follow the instructions in the log. Thats it.
@@ -152,6 +157,7 @@ In **v2.3** it's not necessary to do complicated steps to get a list of your cec
 | favChannel | No | URI from the favourite channel |
 | maxVolume | No | Max adjustable volume (Default: 35) |
 | detectCEC | No | Expose CEC devices instead of HDMI inputs to HomeKit (Default: true) |
+| offState | No | choose between "HOME", "CHANNEL" or "OFF" to createyour own off state command (Default: "HOME") |
 
 
 ## Supported clients
@@ -164,7 +170,7 @@ This platform and the switches it creates have been verified to work with the fo
 
 ## Known issues | TODO
 
-- ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the "Home APP" setted in config.json instead
+- ISSUE: At the moment it is not possible to deactivate a CEC device or shutting it down, this plugin activates the option setted in config.json instead (offState > "HOME" for Home App, "CHANNEL" for Channels and "OFF" for turning TV off)
 
 - [x] TODO: create option to expose other Inputs like Scart, Composite, Screen mirroring
 - [x] TODO: Bulb for volume up/down
@@ -172,6 +178,8 @@ This platform and the switches it creates have been verified to work with the fo
 - [x] TODO: Better error handling
 - [x] TODO: Service to switch between Channels
 - [x] TODO: Better, faster and easier
+- [x] TODO: Adding cache function
+- [x] TODO: New option: offState
 
 
 ## Contributing
