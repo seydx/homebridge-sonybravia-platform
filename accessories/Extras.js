@@ -253,6 +253,7 @@ class EXTRAINPUTS {
                             setTimeout(function() {
                                 self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
                             }, 10000)
+                            callback()
                         });
 
                 } else {
@@ -355,6 +356,7 @@ class EXTRAINPUTS {
                             setTimeout(function() {
                                 self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
                             }, 10000)
+                            callback()
                         });
                 } else {
                     self.getContent("/sony/avContent", "setPlayContent", {
