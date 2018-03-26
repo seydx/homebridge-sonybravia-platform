@@ -275,6 +275,8 @@ class APPS {
                 .then((data) => {
 
                     var response = JSON.parse(data);
+                    self.log("Caching apps.")
+                    self.storage.setItem("Sony_Apps", response)
 
                     if ("error" in response) {
                         if (response.error[0] == 7 || response.error[0] == 40005) {
