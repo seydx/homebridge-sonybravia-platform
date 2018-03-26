@@ -182,14 +182,14 @@ class INPUTS {
                                     self.log("Turning on the TV...");
                                     self.state = true;
                                     setTimeout(function() {
-                                        this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                                        self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
                                     }, 2000)
 
                                 })
                                 .catch((err) => {
                                     self.log(self.name + ": " + err + " Try setting again...");
                                     self.state = true;
-                                    this.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(self.state);
                                     callback(null, self.state)
                                 });
 
