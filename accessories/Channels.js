@@ -368,8 +368,24 @@ class CHANNELS {
 
                     if ("error" in response) {
                         if (response.error[0] == 7 || response.error[0] == 40005) {
-                            self.log("TV OFF");
-                            self.state = false;
+                            self.getContent("/sony/system", "setPowerStatus", {
+                                    "status": true
+                                }, "1.0")
+                                .then((data) => {
+
+                                    self.log("Turning on the TV...");
+                                    self.state = true;
+                                    setTimeout(function() {
+                                        self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    }, 2000)
+
+                                })
+                                .catch((err) => {
+                                    self.log(self.name + ": " + err + " Try setting again...");
+                                    self.state = true;
+                                    self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                                    callback(null, self.state)
+                                });
                         } else if (response.error[0] == 3 || response.error[0] == 5) {
                             self.log("Illegal argument!");
                             self.state = false;
@@ -497,6 +513,7 @@ class CHANNELS {
                 self.log("Currently active source is Channel. Detected offState is CHANNEL. Setting offState to HOME");
                 self.offState = "HOME";
                 self.Channels.getCharacteristic(Characteristic.On).setValue(false);
+                callback()
             } else if (self.offState == "OFF") {
                 self.getContent("/sony/system", "setPowerStatus", {
                         "status": false
@@ -549,6 +566,7 @@ class CHANNELS {
                 self.log("Off State could not be detected. Please check your config file. Available modes are: HOME, CHANNEL and OFF!. Setting offState to HOME. Trying again...")
                 self.offState = "HOME";
                 self.Channels.getCharacteristic(Characteristic.On).setValue(false);
+                callback()
             }
 
         }
