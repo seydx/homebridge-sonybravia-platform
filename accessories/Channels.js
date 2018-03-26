@@ -447,6 +447,7 @@ class CHANNELS {
                                 setTimeout(function() {
                                     self.ExtraSourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
                                 }, 10000)
+                                callback()
 
                             } else {
 
@@ -464,6 +465,7 @@ class CHANNELS {
                             setTimeout(function() {
                                 self.Channels.getCharacteristic(Characteristic.On).setValue(false);
                             }, 10000)
+                            callback()
                         });
                 } else {
                     self.getContent("/sony/appControl", "setActiveApp", {
