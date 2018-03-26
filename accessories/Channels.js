@@ -56,8 +56,19 @@ class CHANNELS {
         inherits(Characteristic.TargetChannel, Characteristic);
         Characteristic.TargetChannel.UUID = "b098e733-c600-4e89-a079-9625e20d5424";
 
-        var platform = this;
+        Characteristic.SaveChannel = function() {
+            Characteristic.call(this, "Save Channel", "f4fcc460-b24f-4b6e-99dd-7dae323a85d9");
+            this.setProps({
+                format: Characteristic.Formats.BOOL,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.SaveChannel, Characteristic);
+        Characteristic.SaveChannel.UUID = "f4fcc460-b24f-4b6e-99dd-7dae323a85d9";
 
+        var platform = this;
+        this.api = api;
         this.log = log;
         this.name = config.name + " Channels";
         this.psk = config.psk;
@@ -77,6 +88,12 @@ class CHANNELS {
         !this.channelnr ? this.channelnr = 0 : this.channelnr;
         !this.channelname ? this.channelname = "" : this.channelname;
         !this.state ? this.state = false : this.state;
+
+        //STORAGE
+        this.storage = require('node-persist');
+        this.storage.initSync({
+            dir: this.api.user.persistPath()
+        });
 
         this.getContent = function(setPath, setMethod, setParams, setVersion) {
 
@@ -156,6 +173,11 @@ class CHANNELS {
         this.Channels.getCharacteristic(Characteristic.FavouriteChannelName)
             .updateValue(self.favchannelname);
 
+        this.Channels.addCharacteristic(Characteristic.SaveChannel);
+        this.Channels.getCharacteristic(Characteristic.SaveChannel)
+            .updateValue(false)
+            .on("set", this.setNewChannel.bind(this));
+
         this.Channels.getCharacteristic(Characteristic.On)
             .updateValue(self.state)
             .on('set', this.setChannel.bind(this));
@@ -175,18 +197,33 @@ class CHANNELS {
                 var response = JSON.parse(data);
 
                 if ("error" in response) {
-                    self.state = false;
+                    if (response.error[0] == 7 || response.error[0] == 40005) {
+                        self.log("TV OFF");
+                        self.state = false;
+                    } else if (response.error[0] == 3 || response.error[0] == 5) {
+                        self.log("Illegal argument!");
+                        self.state = false;
+                    } else {
+                        self.log("ERROR: " + JSON.stringify(response));
+                        self.state = false;
+                    }
                 } else {
                     if (response.result[0].source == "tv:dvbt" || response.result[0].source == "tv:dvbc") {
                         self.state = true;
                         self.channelname = response.result[0].title;
                         self.channelnr = parseInt(response.result[0].dispNum) - 1;
+                        self.newfavChannel = response.result[0].uri;
+                        self.newfavchannelname = response.result[0].title;
+                    } else {
+                        self.state = false;
                     }
                 }
 
                 self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                 self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                 self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                self.Channels.getCharacteristic(Characteristic.FavouriteChannelName).updateValue(self.favchannelname);
+                self.Channels.getCharacteristic(Characteristic.SaveChannel).updateValue(false);
                 self.getCount = 0;
                 setTimeout(function() {
                     self.getStates();
@@ -197,6 +234,8 @@ class CHANNELS {
                 self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                 self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                 self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                self.Channels.getCharacteristic(Characteristic.FavouriteChannelName).updateValue(self.favchannelname);
+                self.Channels.getCharacteristic(Characteristic.SaveChannel).updateValue(false);
                 if (self.getCount > 5) {
                     self.log(self.name + ": " + err);
                 }
@@ -205,6 +244,24 @@ class CHANNELS {
                     self.getStates();
                 }, 60000)
             });
+
+    }
+
+    setNewChannel(state, callback) {
+
+        var self = this;
+
+        if (state) {
+            self.storage.setItem("Sony_FavChannel", self.newfavChannel);
+            self.favChannel = self.newfavChannel;
+            self.favchannelname = self.newfavchannelname;
+            self.log(self.newfavchannelname + " was saved as new favourite channel!");
+            //self.AppService.getCharacteristic(Characteristic.FavouriteAppName).updateValue(self.favappname);
+            self.Channels.getCharacteristic(Characteristic.SaveChannel).setValue(false);
+            callback()
+        } else {
+            callback()
+        }
 
     }
 
@@ -221,45 +278,68 @@ class CHANNELS {
 
                 var response = JSON.parse(data);
 
-                var name = response.result[0];
-
-                for (var i = 0; i <= name.length; i++) {
-
-                    switch (i) {
-                        case 0:
-                            self.channelname = name[0].title;
-                            uri = name[0].uri;
-                            self.channelnr = value;
-                            self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
-                            self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
-                            break;
+                if ("error" in response) {
+                    if (response.error[0] == 7 || response.error[0] == 40005) {
+                        self.log("TV OFF");
+                        self.state = false;
+                    } else if (response.error[0] == 3 || response.error[0] == 5) {
+                        self.log("Illegal argument!");
+                        self.state = false;
+                    } else {
+                        self.log("ERROR: " + JSON.stringify(response));
+                        self.state = false;
                     }
+                } else {
 
-                }
+                    var name = response.result[0];
 
-                self.getContent("/sony/avContent", "setPlayContent", {
-                        "uri": uri
-                    }, "1.0")
-                    .then((data) => {
+                    for (var i = 0; i <= name.length; i++) {
 
-                        var response = JSON.parse(data);
-
-                        if ("error" in response) {
-                            self.log("TV OFF");
-                            self.state = false;
-                        } else {
-                            self.log("Turn ON: " + self.channelname)
-                            self.state = true;
+                        switch (i) {
+                            case 0:
+                                self.channelname = name[0].title;
+                                uri = name[0].uri;
+                                self.channelnr = value;
+                                self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
+                                self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
+                                break;
                         }
 
-                        self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
-                        callback()
+                    }
 
-                    })
-                    .catch((err) => {
-                        self.log(self.name + ": " + err);
-                        callback()
-                    });
+                    self.getContent("/sony/avContent", "setPlayContent", {
+                            "uri": uri
+                        }, "1.0")
+                        .then((data) => {
+
+                            var response = JSON.parse(data);
+
+                            if ("error" in response) {
+                                if (response.error[0] == 7 || response.error[0] == 40005) {
+                                    self.log("TV OFF");
+                                    self.state = false;
+                                } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                    self.log("Illegal argument!");
+                                    self.state = false;
+                                } else {
+                                    self.log("ERROR: " + JSON.stringify(response));
+                                    self.state = false;
+                                }
+                            } else {
+                                self.log("Turn ON: " + self.channelname)
+                                self.state = true;
+                            }
+
+                            self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
+                            callback()
+
+                        })
+                        .catch((err) => {
+                            self.log(self.name + ": " + err);
+                            callback()
+                        });
+
+                }
 
             })
             .catch((err) => {
@@ -287,8 +367,16 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("An Error occured. Try again. Error: " + JSON.stringify(response));
-                        self.state = false;
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
                     } else {
                         self.log("Switch to " + self.favchannelname)
                         self.state = true;
@@ -306,7 +394,7 @@ class CHANNELS {
                         self.state = false;
                         setTimeout(function() {
                             self.setOnCount += 1;
-                            self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                             self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                             self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                         }, 3000)
@@ -327,15 +415,22 @@ class CHANNELS {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log(self.homeapp)
-                        self.log("An Error occured. Try again. Error: " + JSON.stringify(response));
-                        self.state = false;
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = true;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = true;
+                        }
                     } else {
                         self.log("Switch to Home App")
                         self.state = false;
                     }
 
-                    self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                    self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                     self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                     self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                     self.setOffCount = 0;
@@ -347,7 +442,7 @@ class CHANNELS {
                         self.state = false;
                         setTimeout(function() {
                             self.setOffCount += 1;
-                            self.Channels.getCharacteristic(Characteristic.On).setValue(self.state);
+                            self.Channels.getCharacteristic(Characteristic.On).updateValue(self.state);
                             self.Channels.getCharacteristic(Characteristic.TargetChannel).updateValue(self.channelnr);
                             self.Channels.getCharacteristic(Characteristic.ChannelName).updateValue(self.channelname);
                         }, 3000)
