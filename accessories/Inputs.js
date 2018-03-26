@@ -273,6 +273,7 @@ class INPUTS {
                             setTimeout(function() {
                                 self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
                             }, 10000)
+                            callback()
                         });
 
                 } else {
@@ -349,6 +350,7 @@ class INPUTS {
                                 setTimeout(function() {
                                     self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
                                 }, 10000)
+                                callback()
 
                             } else {
 
@@ -375,6 +377,7 @@ class INPUTS {
                             setTimeout(function() {
                                 self.SourceSwitch.getCharacteristic(Characteristic.On).setValue(false);
                             }, 10000)
+                            callback()
                         });
                 } else {
                     self.getContent("/sony/avContent", "setPlayContent", {
