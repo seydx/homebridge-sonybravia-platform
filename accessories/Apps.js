@@ -57,7 +57,7 @@ class APPS {
         Characteristic.FavouriteAppName.UUID = "a7dfed60-96ab-4b16-a265-d77ccf070a6f";
 
         Characteristic.AppList = function() {
-            Characteristic.call(this, "App List", "d02e8466-323b-4773-b771-e7bfdc479d3f");
+            Characteristic.call(this, "Applist", "d02e8466-323b-4773-b771-e7bfdc479d3f");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -67,8 +67,20 @@ class APPS {
         inherits(Characteristic.AppList, Characteristic);
         Characteristic.AppList.UUID = "d02e8466-323b-4773-b771-e7bfdc479d3f";
 
+        Characteristic.SaveHomeApp = function() {
+            Characteristic.call(this, "Save Home App", "734d1835-662c-4ec4-b3b5-a0bfe1d76844");
+            this.setProps({
+                format: Characteristic.Formats.BOOL,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.SaveHomeApp, Characteristic);
+        Characteristic.SaveHomeApp.UUID = "734d1835-662c-4ec4-b3b5-a0bfe1d76844";
+
         var platform = this;
 
+        this.api = api;
         this.log = log;
         this.name = config.name + " Apps";
         this.psk = config.psk;
@@ -80,9 +92,17 @@ class APPS {
         this.setOffCount = 0;
         this.setCount = 0;
         this.getCount = 0;
-        this.homeapp = config.homeapp;
+        //this.homeapp = config.homeapp;
         this.favappname = config.favappname;
         this.apps = apps;
+
+        //STORAGE
+        this.storage = require('node-persist');
+        this.storage.initSync({
+            dir: this.api.user.persistPath()
+        });
+
+        this.homeapp = config.homeapp;
 
         !this.appnr ? this.appnr = 0 : this.appnr;
         !this.appname ? this.appname = "" : this.appname;
@@ -145,7 +165,6 @@ class APPS {
             .setCharacteristic(Characteristic.SerialNumber, "Sony-Apps")
             .setCharacteristic(Characteristic.FirmwareRevision, require('../package.json').version);
 
-        //this.AppService = new Service.AppService(this.name + " Service");
         this.AppService = new Service.Switch(this.name);
 
         this.AppService.addCharacteristic(Characteristic.TargetApp);
@@ -171,6 +190,11 @@ class APPS {
         this.AppService.getCharacteristic(Characteristic.FavouriteAppName)
             .updateValue(self.favappname);
 
+        this.AppService.addCharacteristic(Characteristic.SaveHomeApp);
+        this.AppService.getCharacteristic(Characteristic.SaveHomeApp)
+            .updateValue(false)
+            .on("set", this.setNewHomeApp.bind(this));
+
         this.AppService.getCharacteristic(Characteristic.On)
             .updateValue(self.state)
             .on('set', this.setHomeApp.bind(this));
@@ -183,8 +207,28 @@ class APPS {
     getStates() {
 
         var self = this;
-
         self.appnr = self.AppService.getCharacteristic(Characteristic.TargetApp).value;
+
+        for (var i = 0; i < self.apps.length; i++) {
+
+            switch (i) {
+                case self.appnr:
+                    self.appname = self.apps[i].title;
+                    self.newhomeapp = self.apps[i].uri;
+                    self.newfavappname = self.apps[i].title;
+                    break;
+            }
+
+            if (self.homeapp == self.apps[i].uri) {
+                self.favappname = self.apps[i].title;
+            }
+
+        }
+
+        self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
+        self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
+        self.AppService.getCharacteristic(Characteristic.FavouriteAppName).updateValue(self.favappname);
+        self.AppService.getCharacteristic(Characteristic.SaveHomeApp).updateValue(false);
 
         self.getContent("/sony/avContent", "getPlayingContentInfo", "1.0", "1.0")
             .then((data) => {
@@ -192,7 +236,7 @@ class APPS {
                 var response = JSON.parse(data);
 
                 if ("error" in response) {
-                    if (response.error[0] === 7) {
+                    if (response.error[0] == 7) {
                         self.state = true;
                     } else {
                         self.state = false;
@@ -201,19 +245,7 @@ class APPS {
                     self.state = false;
                 }
 
-                for (var i = 0; i <= self.apps.length; i++) {
-
-                    switch (i) {
-                        case self.appnr:
-                            self.appname = self.apps[i].title;
-                            break;
-                    }
-
-                }
-
                 self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
-                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
                 self.getCount = 0;
                 setTimeout(function() {
                     self.getStates();
@@ -222,8 +254,6 @@ class APPS {
             })
             .catch((err) => {
                 self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
-                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
                 if (self.getCount > 5) {
                     self.log(self.name + ": " + err);
                 }
@@ -246,11 +276,23 @@ class APPS {
 
                     var response = JSON.parse(data);
 
-                    var name = response.result[0];
+                    if ("error" in response) {
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                        }
+                    } else {
 
-                    self.log("Following, a list of all installed Apps on the TV. Have fun.");
-                    for (var i = 0; i < name.length; i++) {
-                        self.log(i + ": " + name[i].title);
+                        var name = response.result[0];
+
+                        self.log("Following, a list of all installed Apps on the TV. Have fun.");
+                        for (var i = 0; i < name.length; i++) {
+                            self.log(i + ": " + name[i].title);
+                        }
+
                     }
 
                     self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);
@@ -267,6 +309,25 @@ class APPS {
 
             callback()
 
+        }
+
+    }
+
+    setNewHomeApp(state, callback)  {
+
+        var self = this;
+
+        if (state) {
+            self.storage.setItem("Sony_HomeApp", self.newhomeapp);
+            self.homeapp = self.newhomeapp;
+            self.favappname = self.newfavappname;
+            self.log(self.newfavappname + " was saved as new Home App!");
+            //self.AppService.getCharacteristic(Characteristic.FavouriteAppName).updateValue(self.favappname);
+            self.AppService.getCharacteristic(Characteristic.SaveHomeApp).setValue(false);
+            callback()
+        } else {
+            //self.log("Resetting switch");
+            callback()
         }
 
     }
@@ -288,6 +349,9 @@ class APPS {
 
         }
 
+        self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
+        self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
+
         self.getContent("/sony/appControl", "setActiveApp", {
                 "uri": uri
             }, "1.0")
@@ -295,9 +359,18 @@ class APPS {
 
                 var response = JSON.parse(data);
 
-                self.log("Turn ON: " + self.appname);
-                self.AppService.getCharacteristic(Characteristic.TargetApp).updateValue(self.appnr);
-                self.AppService.getCharacteristic(Characteristic.TargetName).updateValue(self.appname);
+                if ("error" in response) {
+                    if (response.error[0] == 7 || response.error[0] == 40005) {
+                        self.log("TV OFF");
+                    } else if (response.error[0] == 3 || response.error[0] == 5) {
+                        self.log("Illegal argument!");
+                    } else {
+                        self.log("ERROR: " + JSON.stringify(response));
+                    }
+                } else {
+                    self.log("Turn ON: " + self.appname);
+                }
+
                 self.setCount = 0;
                 callback();
 
@@ -329,8 +402,22 @@ class APPS {
 
                     var response = JSON.parse(data);
 
-                    self.log("Turn ON: " + self.favappname);
-                    self.state = true;
+                    if ("error" in response) {
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
+                    } else {
+                        self.log("Turn ON: " + self.favappname);
+                        self.state = true;
+                    }
+
                     self.setOnCount = 0;
                     self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
@@ -356,8 +443,22 @@ class APPS {
 
                     var response = JSON.parse(data);
 
-                    self.log("Turn off current app");
-                    self.state = false;
+                    if ("error" in response) {
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = true;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = true;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = true;
+                        }
+                    } else {
+                        self.log("Turn OFF: " + self.favappname);
+                        self.state = false;
+                    }
+
                     self.setOffCount = 0;
                     self.AppService.getCharacteristic(Characteristic.On).updateValue(self.state);
                     callback(null, self.state)
