@@ -170,8 +170,18 @@ class VOLUME {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("Could not set mute state, TV seems to be off");
-                        self.state = false;
+
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
+
                     } else {
                         //self.log("Turn ON: " + self.name);
                         self.state = true;
@@ -207,8 +217,18 @@ class VOLUME {
                     var response = JSON.parse(data);
 
                     if ("error" in response) {
-                        self.log("Could not set mute state, TV seems to be off");
-                        self.state = false;
+
+                        if (response.error[0] == 7 || response.error[0] == 40005) {
+                            self.log("TV OFF");
+                            self.state = false;
+                        } else if (response.error[0] == 3 || response.error[0] == 5) {
+                            self.log("Illegal argument!");
+                            self.state = false;
+                        } else {
+                            self.log("ERROR: " + JSON.stringify(response));
+                            self.state = false;
+                        }
+
                     } else {
                         //self.log("Turn OFF: " + self.name);
                         self.state = false;
@@ -252,8 +272,18 @@ class VOLUME {
                 var response = JSON.parse(data);
 
                 if ("error" in response) {
-                    self.log("Could not change volume, TV seems to be off");
-                    self.volume = 0;
+
+                    if (response.error[0] == 7 || response.error[0] == 40005) {
+                        self.log("TV OFF");
+                        self.volume = 0;
+                    } else if (response.error[0] == 3 || response.error[0] == 5) {
+                        self.log("Illegal argument!");
+                        self.volume = 0;
+                    } else {
+                        self.log("ERROR: " + JSON.stringify(response));
+                        self.volume = 0;
+                    }
+
                 } else {
                     self.log("Volume: " + value);
                     self.volume = value;
