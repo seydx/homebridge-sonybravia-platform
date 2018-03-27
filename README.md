@@ -136,6 +136,17 @@ Due to the reason that its not possible to **deactivate / shut down** a HDMI inp
 
 In **v2.3** it's not necessary to do complicated steps to get a list of your cec devices. If you want to expose your CEC devices like Apple TV or PlayStation 4 just put **"detectCEC":true** in your config.json and follow the instructions in the log. Thats it.
 
+**NOTE:** If you have issues with the state of your CEC Device (due to different tv models) you can set "cecDevices" in your config.json to set manually the HDMI port. The title must be the same as from the cec device. Example:
+```
+"cecDevices":[
+    {
+      "title":"Apple TV",
+      "hdmiport":4
+    }
+]
+```
+
+
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
 
 
@@ -157,6 +168,7 @@ In **v2.3** it's not necessary to do complicated steps to get a list of your cec
 | favChannel | No | URI from the favourite channel |
 | maxVolume | No | Max adjustable volume (Default: 35) |
 | detectCEC | No | Expose CEC devices instead of HDMI inputs to HomeKit (Default: true) |
+| cecDevices | No | **ONLY** if you have issues with the state of your cec devices, you can add this to manually define the hdmi port of the device |
 | offState | No | choose between "HOME", "CHANNEL" or "OFF" to createyour own off state command (Default: "HOME") |
 
 
