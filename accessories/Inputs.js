@@ -27,6 +27,7 @@ class INPUTS {
         this.offState = config.offState;
         this.favChannel = config.favChannel;
         this.channelSource = config.channelSource;
+        this.customuri = config.customuri;
 
         this.setOnCount = 0;
         this.setOffCount = 0;
@@ -130,7 +131,7 @@ class INPUTS {
 
                 if ("result" in response) {
 
-                    if (response.result[0].uri == self.uri || response.result[0].uri == self.simpleuri) {
+                    if (response.result[0].uri == self.uri || response.result[0].uri == self.simpleuri || response.result[0].uri == self.customuri) {
                         self.state = true;
                     } else {
                         self.state = false;
