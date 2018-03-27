@@ -63,6 +63,7 @@ function SonyBraviaPlatform(log, config, api) {
 
     //CECs
     this.detectCEC = config["detectCEC"] || true;
+    this.cecDevices = config["cecDevices"];
 
     //COUNT
     this.counthdmi = 0;
@@ -587,10 +588,19 @@ SonyBraviaPlatform.prototype = {
 
                                         var uri = result[i].uri;
 
-                                        if (uri.match("logicalAddr")) {
-                                            var port = uri.split("port=")[1].split("&logicalAddr=")[0];
+                                        if (self.cecDevices) {
+                                            for (var l = 0; l < self.cecDevices.length; l++) {
+                                                if (self.cecDevices[l].title == result[i].title) {
+                                                    var port = self.cecDevices[l].hdmiport;
+                                                    var customuri = "extInput:hdmi?port=" + port;
+                                                }
+                                            }
                                         } else {
-                                            var port = uri.split("port=")[1];
+                                            if (uri.match("logicalAddr")) {
+                                                var port = uri.split("port=")[1].split("&logicalAddr=")[0];
+                                            } else {
+                                                var port = uri.split("port=")[1];
+                                            }
                                         }
 
                                         var newuri = "extInput:hdmi?port=" + port;
@@ -602,6 +612,9 @@ SonyBraviaPlatform.prototype = {
                                                 hdmiArray[j].title = result[i].title;
                                                 hdmiArray[j].uri = result[i].uri;
                                                 hdmiArray[j].meta = result[i].icon;
+                                                if (self.cecDevices) {
+                                                    hdmiArray[j]["customuri"] = customuri;
+                                                }
                                             }
 
                                         }
