@@ -43,18 +43,19 @@ function SonyBraviaPlatform(log, config, api) {
         this.log("Critical interval value! Setting interval to 10 seconds");
         this.interval = 10000;
     }
+    this.inputsEnabled = config["inputsEnabled"] === true;
     this.offState = config["offState"] || "HOME";
     // Modes: HOME, CHANNEL, OFF
 
     //Volume
-    this.volumeEnabled = config["volumeEnabled"] || true;
+    this.volumeEnabled = config["volumeEnabled"] === true;
     this.maxVolume = config["maxVolume"] || 35;
 
     //Extra Inputs
     this.extraInputs = config["extraInputs"] || false;
 
     //Apps
-    this.appsEnabled = config["appsEnabled"] || true;
+    this.appsEnabled = config["appsEnabled"] === true;
     this.homeapp = config["homeapp"];
 
     //Channels
@@ -63,8 +64,11 @@ function SonyBraviaPlatform(log, config, api) {
     this.favChannel = config["favChannel"];
 
     //CECs
-    this.detectCEC = config["detectCEC"] || true;
+    this.detectCEC = config["detectCEC"] === true;
     this.cecDevices = config["cecDevices"];
+    if (!this.inputsEnabled) {
+        this.detectCEC = false
+    }
 
     //Remote Control
     this.remoteControl = config["remoteControl"] || false;
@@ -156,7 +160,7 @@ SonyBraviaPlatform.prototype = {
 
                 function(next) {
                     if (self.remoteControl) {
-                        self.log("Get remote control..");
+                        self.log("Getting remote control..");
                         var remoteConfig = {
                             name: self.name,
                             psk: self.psk,
@@ -311,6 +315,7 @@ SonyBraviaPlatform.prototype = {
                             }
 
                         } else {
+                            self.log("Apps not enabled. Skipping discovery.")
                             next();
                         }
 
@@ -454,6 +459,7 @@ SonyBraviaPlatform.prototype = {
                                 });
 
                         } else {
+                            self.log("Channels not enabled. Skipping discovery.")
                             next();
                         }
 
@@ -466,122 +472,130 @@ SonyBraviaPlatform.prototype = {
 
                     function fetchSources(next) {
 
-                        self.log("Getting inputs...")
+                        if (self.inputsEnabled) {
 
-                        if (self.storage.getItem("Sony_Inputs")) {
+                            self.log("Getting inputs...")
 
-                            self.log("HDMI inputs found in storage.");
+                            if (self.storage.getItem("Sony_Inputs")) {
 
-                            var response = self.storage.getItem("Sony_Inputs");
-                            var result = response.result[0];
-                            self.counthdmi = 0;
-                            self.countcec = 0;
-                            var hdmiArray = []
+                                self.log("HDMI inputs found in storage.");
 
-                            for (var i = 0; i < result.length; i++) {
+                                var response = self.storage.getItem("Sony_Inputs");
+                                var result = response.result[0];
+                                self.counthdmi = 0;
+                                self.countcec = 0;
+                                var hdmiArray = []
 
-                                var toConfig = {
-                                    psk: self.psk,
-                                    ipadress: self.ipadress,
-                                    interval: self.interval,
-                                    homeapp: self.homeapp,
-                                    port: self.port,
-                                    offState: self.offState,
-                                    favChannel: self.favChannel,
-                                    channelSource: self.channelSource
-                                }
+                                for (var i = 0; i < result.length; i++) {
 
-                                if (result[i].icon == "meta:hdmi") {
+                                    var toConfig = {
+                                        psk: self.psk,
+                                        ipadress: self.ipadress,
+                                        interval: self.interval,
+                                        homeapp: self.homeapp,
+                                        port: self.port,
+                                        offState: self.offState,
+                                        favChannel: self.favChannel,
+                                        channelSource: self.channelSource
+                                    }
 
-                                    self.counthdmi += 1;
+                                    if (result[i].icon == "meta:hdmi") {
 
-                                    toConfig["name"] = self.name + " " + result[i].title;
-                                    toConfig["title"] = result[i].title;
-                                    toConfig["uri"] = result[i].uri;
-                                    toConfig["meta"] = result[i].icon;
+                                        self.counthdmi += 1;
 
-                                    hdmiArray.push(toConfig);
+                                        toConfig["name"] = self.name + " " + result[i].title;
+                                        toConfig["title"] = result[i].title;
+                                        toConfig["uri"] = result[i].uri;
+                                        toConfig["meta"] = result[i].icon;
 
-                                }
-
-                            }
-
-                            next(null, hdmiArray)
-
-                        } else {
-
-                            self.log("No HDMI inputs in storage. Start requesting.")
-
-                            self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
-                                .then((data) => {
-
-                                    var response = JSON.parse(data);
-
-                                    if ("error" in response) {
-
-                                        self.log("An error occured by getting inputs!");
-
-                                        if (response.error[0] == 7 || response.error[0] == 40005) {
-                                            self.log("Please turn on the TV! Trying again...");
-                                        } else if (response.error[0] == 3 || response.error[0] == 5) {
-                                            self.log("Illegal argument!");
-                                        } else {
-                                            self.log("ERROR: " + JSON.stringify(response));
-                                        }
-
-                                        setTimeout(function() {
-                                            fetchSources(next);
-                                        }, 10000)
-
-                                    } else {
-
-                                        var result = response.result[0];
-                                        self.log("Caching HDMI inputs.")
-                                        self.storage.setItem("Sony_Inputs", response)
-                                        self.counthdmi = 0;
-                                        self.countcec = 0;
-                                        var hdmiArray = []
-
-                                        for (var i = 0; i < result.length; i++) {
-
-                                            var toConfig = {
-                                                psk: self.psk,
-                                                ipadress: self.ipadress,
-                                                interval: self.interval,
-                                                homeapp: self.homeapp,
-                                                port: self.port,
-                                                offState: self.offState,
-                                                favChannel: self.favChannel,
-                                                channelSource: self.channelSource
-                                            }
-
-                                            if (result[i].icon == "meta:hdmi") {
-
-                                                self.counthdmi += 1;
-
-                                                toConfig["name"] = self.name + " " + result[i].title;
-                                                toConfig["title"] = result[i].title;
-                                                toConfig["uri"] = result[i].uri;
-                                                toConfig["meta"] = result[i].icon;
-
-                                                hdmiArray.push(toConfig);
-
-                                            }
-
-                                        }
-
-                                        next(null, hdmiArray)
+                                        hdmiArray.push(toConfig);
 
                                     }
 
-                                })
-                                .catch((err) => {
-                                    self.log("Inputs: " + err + " - Trying again");
-                                    setTimeout(function() {
-                                        fetchSources(next);
-                                    }, 10000)
-                                });
+                                }
 
+                                next(null, hdmiArray)
+
+                            } else {
+
+                                self.log("No HDMI inputs in storage. Start requesting.")
+
+                                self.getContent("/sony/avContent", "getCurrentExternalInputsStatus", "1.0", "1.0")
+                                    .then((data) => {
+
+                                        var response = JSON.parse(data);
+
+                                        if ("error" in response) {
+
+                                            self.log("An error occured by getting inputs!");
+
+                                            if (response.error[0] == 7 || response.error[0] == 40005) {
+                                                self.log("Please turn on the TV! Trying again...");
+                                            } else if (response.error[0] == 3 || response.error[0] == 5) {
+                                                self.log("Illegal argument!");
+                                            } else {
+                                                self.log("ERROR: " + JSON.stringify(response));
+                                            }
+
+                                            setTimeout(function() {
+                                                fetchSources(next);
+                                            }, 10000)
+
+                                        } else {
+
+                                            var result = response.result[0];
+                                            self.log("Caching HDMI inputs.")
+                                            self.storage.setItem("Sony_Inputs", response)
+                                            self.counthdmi = 0;
+                                            self.countcec = 0;
+                                            var hdmiArray = []
+
+                                            for (var i = 0; i < result.length; i++) {
+
+                                                var toConfig = {
+                                                    psk: self.psk,
+                                                    ipadress: self.ipadress,
+                                                    interval: self.interval,
+                                                    homeapp: self.homeapp,
+                                                    port: self.port,
+                                                    offState: self.offState,
+                                                    favChannel: self.favChannel,
+                                                    channelSource: self.channelSource
+                                                }
+
+                                                if (result[i].icon == "meta:hdmi") {
+
+                                                    self.counthdmi += 1;
+
+                                                    toConfig["name"] = self.name + " " + result[i].title;
+                                                    toConfig["title"] = result[i].title;
+                                                    toConfig["uri"] = result[i].uri;
+                                                    toConfig["meta"] = result[i].icon;
+
+                                                    hdmiArray.push(toConfig);
+
+                                                }
+
+                                            }
+
+                                            next(null, hdmiArray)
+
+                                        }
+
+                                    })
+                                    .catch((err) => {
+                                        self.log("Inputs: " + err + " - Trying again");
+                                        setTimeout(function() {
+                                            fetchSources(next);
+                                        }, 10000)
+                                    });
+
+                            }
+
+                        } else {
+                            var hdmiArray;
+                            self.log("Inputs not enabled. Skipping discovery.")
+                            next(null, hdmiArray);
                         }
 
                     }
@@ -760,7 +774,7 @@ SonyBraviaPlatform.prototype = {
                             }
 
                         } else {
-                            self.log("CEC detection is not enabled. Skipping discovery.")
+                            self.log("CEC detection not enabled. Skipping discovery.")
                             next(null, hdmiArray);
                         }
 
@@ -897,6 +911,7 @@ SonyBraviaPlatform.prototype = {
                             }
 
                         } else {
+                            self.log("Extra Inputs not enabled. Skipping discovery.")
                             var extraArray;
                             next(null, extraArray)
                         }
@@ -942,6 +957,8 @@ SonyBraviaPlatform.prototype = {
                         var volAccessory = new VOLUME_Accessory(self.log, volConfig, self.api)
                         accessoriesArray.push(volAccessory);
 
+                    } else {
+                        self.log("Volume not enabled. Skipping discovery.")
                     }
 
                     next();
