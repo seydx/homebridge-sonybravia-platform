@@ -257,7 +257,7 @@ class CHANNELS {
             self.favchannelname = self.newfavchannelname;
             self.log(self.newfavchannelname + " was saved as new favourite channel!");
             //self.AppService.getCharacteristic(Characteristic.FavouriteAppName).updateValue(self.favappname);
-            self.Channels.getCharacteristic(Characteristic.SaveChannel).setValue(false);
+            setTimeout(function(){self.Channels.getCharacteristic(Characteristic.SaveChannel).updateValue(false);},500);
             callback()
         } else {
             callback()
