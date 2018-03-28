@@ -1,4 +1,4 @@
-# homebridge-sonybravia-platform v2.4
+# homebridge-sonybravia-platform v2.5
 
 [![npm](https://img.shields.io/npm/v/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
 [![npm](https://img.shields.io/npm/dt/homebridge-sonybravia-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-sonybravia-platform)
@@ -77,7 +77,9 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "appsEnabled": true,
   "channelsEnabled":false,
   "detectCEC":true,
-  "offState": "HOME"
+  "offState": "HOME",
+  "remoteControl":true,
+  "controlMode":"BASIC",
   "homeapp":"com.sony.dtv.eu.siptv.video.eu.siptv.atv.MainActivity",
   "favChannel":"tv:dvbt?trip=1.1051.10304&srvName=SWR RP HD"
  }
@@ -146,6 +148,10 @@ In **v2.3** it's not necessary to do complicated steps to get a list of your cec
 ]
 ```
 
+## Remote Control
+
+In **v2.5** you have the possibility to expose a remote control (if "remoteControl" is true in config.json) to HomeKit. With the remote control, you can send commands like channel up, channel down, volume up, volume down, enter, home, toggle mute, toggle power etc. You have also the possibility to choose between "BASIC" or "ADVANCED" mode ("controlMode" in config.json). "BASIC" will only expose basic switches to HomeKit. "ADVANCED" will expose some more stuff. All these "commands" will be available within the "Remote Control" service. Therefore, this service is **not compatible** with the Apple Home app! You can use this with apps like Elgato EVE, Home etc.
+
 
 - See [Example Config](https://github.com/SeydX/homebridge-sonybravia-platform/blob/master/example-config.json) for more details.
 
@@ -160,16 +166,18 @@ In **v2.3** it's not necessary to do complicated steps to get a list of your cec
 | psk | **Yes** | Your Pre Shared Key |
 | interval | No | Polling Interval in seconds (Default: 2s) |
 | extraInputs | No | Expose extra sources like AV, display mirroring etc. (Default: true) |
-| appsEnabled | No | Expose App Service to HomeKit (Not compatible with Apple Home App!) (Default: true) |
+| appsEnabled | No | Expose App Service to HomeKit (Default: true, not compatible with Apple Home app) |
 | volumeEnabled | No | Expose a bulb to HomeKit to control TV volume (Default: true) |
-| channelsEnabled | No | Expose Channel Service to HomeKit (Not compatible with Apple Home App!) (Default: false) |
+| channelsEnabled | No | Expose Channel Service to HomeKit (Default: false, not compatible with Apple Home app) |
 | channelSource | No | Source type (tv:dvbt , tv:dvbc) (Default: tv:dvbt) |
 | homeapp | No | URI of an installed app on the TV |
 | favChannel | No | URI from the favourite channel |
 | maxVolume | No | Max adjustable volume (Default: 35) |
 | detectCEC | No | Expose CEC devices instead of HDMI inputs to HomeKit (Default: true) |
 | cecDevices | No | **ONLY** if you have issues with the state of your cec devices, you can add this to manually define the hdmi port of the device |
-| offState | No | choose between "HOME", "CHANNEL" or "OFF" to createyour own off state command (Default: "HOME") |
+| offState | No | choose between "HOME", "CHANNEL" or "OFF" to create your own off state command (Default: "HOME") |
+| remoteControl | No | Exposes remote control to HomeKit (Default: false, not compatible with Apple Home app) |
+| controlMode | No | choose between "BASIC" or "ADVANCED" or "OFF" to create your own remote control (Default: "BASIC") |
 
 
 ## Supported clients
@@ -192,6 +200,7 @@ This platform and the switches it creates have been verified to work with the fo
 - [x] TODO: Better, faster and easier
 - [x] TODO: Adding cache function
 - [x] TODO: New option: offState
+- [x] TODO: New function: Remote Control
 
 
 ## Contributing
