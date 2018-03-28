@@ -175,19 +175,20 @@ In **v2.5** you have the possibility to expose a remote control (if "remoteContr
 | port | No | If you have problems with connecting to the TV, try a different port (Default: 80) |
 | psk | **Yes** | Your Pre Shared Key |
 | interval | No | Polling Interval in seconds (Default: 2s) |
-| extraInputs | No | Expose extra sources like AV, display mirroring etc. (Default: true) |
-| appsEnabled | No | Expose App Service to HomeKit (Default: true, not compatible with Apple Home app) |
-| volumeEnabled | No | Expose a bulb to HomeKit to control TV volume (Default: true) |
-| channelsEnabled | No | Expose Channel Service to HomeKit (Default: false, not compatible with Apple Home app) |
-| channelSource | No | Source type (tv:dvbt , tv:dvbc) (Default: tv:dvbt) |
-| homeapp | No | URI of an installed app on the TV |
-| favChannel | No | URI from the favourite channel |
-| maxVolume | No | Max adjustable volume (Default: 35) |
-| detectCEC | No | Expose CEC devices instead of HDMI inputs to HomeKit (Default: true) |
+| inputsEnabled | No | Exposes HDMI inputs to HomeKit (Default: true) |
+| extraInputs | No | Exposes extra sources like AV, display mirroring etc. (Default: true) |
+| detectCEC | No | Exposes CEC devices instead of HDMI inputs to HomeKit (Default: true) |
 | cecDevices | No | **ONLY** if you have issues with the state of your cec devices, you can add this to manually define the hdmi port of the device |
-| offState | No | choose between "HOME", "CHANNEL" or "OFF" to create your own off state command (Default: "HOME") |
+| volumeEnabled | No | Exposes a bulb to HomeKit to control TV volume (Default: true) |
+| maxVolume | No | Max adjustable volume (Default: 35) |
+| appsEnabled | No | Exposes App Service to HomeKit (Default: true, not compatible with Apple Home app) |
+| homeapp | No | URI of an installed app on the TV |
+| channelsEnabled | No | Exposes Channel Service to HomeKit (Default: false, not compatible with Apple Home app) |
+| channelSource | No | Source type (tv:dvbt , tv:dvbc) (Default: tv:dvbt) |
+| favChannel | No | URI from the favourite channel |
 | remoteControl | No | Exposes remote control to HomeKit (Default: false, not compatible with Apple Home app) |
 | controlMode | No | choose between "BASIC" or "ADVANCED" or "OFF" to create your own remote control (Default: "BASIC") |
+| offState | No | choose between "HOME", "CHANNEL" or "OFF" to create your own off state command (Default: "HOME") |
 
 
 ## Supported clients
