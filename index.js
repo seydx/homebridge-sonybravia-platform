@@ -6,7 +6,8 @@ var TV_Accessory = require('./accessories/TV.js'),
     APP_Accessory = require('./accessories/Apps.js'),
     CHANNEL_Accessory = require('./accessories/Channels.js'),
     SOURCE_Accessory = require('./accessories/Inputs.js'),
-    EXTRAS_Accessory = require('./accessories/Extras.js');
+    EXTRAS_Accessory = require('./accessories/Extras.js'),
+    REMOTE_Accessory = require('./accessories/Remote.js');
 
 var Accessory,
     Service,
@@ -64,6 +65,11 @@ function SonyBraviaPlatform(log, config, api) {
     //CECs
     this.detectCEC = config["detectCEC"] || true;
     this.cecDevices = config["cecDevices"];
+
+    //Remote Control
+    this.remoteControl = config["remoteControl"] || false;
+    this.controlMode = config["controlMode"] || "BASIC";
+    //Modes: BASIC, ADVANCED
 
     //COUNT
     this.counthdmi = 0;
@@ -149,6 +155,22 @@ SonyBraviaPlatform.prototype = {
                 },
 
                 function(next) {
+                    if (self.remoteControl) {
+                        self.log("Get remote control..");
+                        var remoteConfig = {
+                            name: self.name,
+                            psk: self.psk,
+                            ipadress: self.ipadress,
+                            port: self.port,
+                            controlMode: self.controlMode
+                        }
+                        var remoteAccessory = new REMOTE_Accessory(self.log, remoteConfig, self.api)
+                        accessoriesArray.push(remoteAccessory);
+                    }
+                    next();
+                },
+
+                function(next) {
 
                     function fetchAppService(next) {
 
@@ -159,7 +181,7 @@ SonyBraviaPlatform.prototype = {
                             if (self.storage.getItem("Sony_Apps")) {
 
                                 self.log("Apps found in storage.");
-                                self.log("Note: If you want to refresh the app list, please use the 'Applist' button in the EVE app or delete 'Sony_Apps' file in your persist folder!");
+                                self.log("Note: If you want to refresh the app list, please use the 'Applist' button within the EVE app or delete 'Sony_Apps' file in your persist folder!");
                                 var response = self.storage.getItem("Sony_Apps");
                                 var result = response.result[0];
                                 self.countapps = response.result[0].length;
