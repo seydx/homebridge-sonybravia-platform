@@ -85,6 +85,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "volumeEnabled": true,
   "appsEnabled": true,
   "channelsEnabled":false,
+  "inputsEnabled":true,
   "detectCEC":true,
   "offState": "HOME",
   "remoteControl":true,
