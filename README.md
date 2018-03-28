@@ -7,7 +7,16 @@
 
 # Homebridge Platform Plugin for Sony Bravia Android TV
 
-This is a Plugin for [Homebridge](https://github.com/nfarina/homebridge) to control your **Sony Android TV**. This plugin expose a Power Switch, HDMI Inputs with CEC functionality (if adjusted in config), a Service for your installed apps on the TV and a Bulb to controll the volume.
+This is a Plugin for [Homebridge](https://github.com/nfarina/homebridge) to control your **Sony Android TV**. 
+
+Following functions can be exposed to HomeKit:
+
+- Switch for TV Power (on/off)
+- Switch for the inputs like HDMI, Scart, CEC Devices, AV, WIFI mirroring
+- Switch for Apps with custom characteristics (see below)
+- Switch for Channels with custom characteristics (see below)
+- Bulb for controlling the volume
+- Remote Controll with commands like toggle mute, toggle tv power, channel up, channel down, enter, return etc
 
 
 ## Why do we need this plugin?
