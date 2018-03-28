@@ -19,7 +19,7 @@ class REMOTE {
         // TVPower Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.TVPower = function() {
-            Characteristic.call(this, "Toggle Power", "8b1230bb-9747-43b8-bd5f-3fd8fcdc36f4");
+            Characteristic.call(this, "TV Power", "8b1230bb-9747-43b8-bd5f-3fd8fcdc36f4");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -33,7 +33,7 @@ class REMOTE {
         // Mute Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.Mute = function() {
-            Characteristic.call(this, "Toggle Mute", "8fbd30e5-f7c9-4563-b014-779dcfd2d359");
+            Characteristic.call(this, "Volume Mute", "8fbd30e5-f7c9-4563-b014-779dcfd2d359");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -75,7 +75,7 @@ class REMOTE {
         // Enter Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.Enter = function() {
-            Characteristic.call(this, "Enter", "b2121f16-4270-4ac2-9660-4bdd1a44c617");
+            Characteristic.call(this, "TV Enter", "b2121f16-4270-4ac2-9660-4bdd1a44c617");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -89,7 +89,7 @@ class REMOTE {
         // Return Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.Return = function() {
-            Characteristic.call(this, "Return", "5b9909e4-9d0f-44d4-ae6c-1e8b1f21a9cf");
+            Characteristic.call(this, "TV Return", "5b9909e4-9d0f-44d4-ae6c-1e8b1f21a9cf");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -100,10 +100,24 @@ class REMOTE {
         Characteristic.Return.UUID = "5b9909e4-9d0f-44d4-ae6c-1e8b1f21a9cf";
 
         ////////////////////////////////////////////////////////////////////////////
+        // Exit Characteristic
+        ////////////////////////////////////////////////////////////////////////////       
+        Characteristic.Exit = function() {
+            Characteristic.call(this, "TV Exit", "0f5b8eb2-ac7f-43d6-9246-559294d467c0");
+            this.setProps({
+                format: Characteristic.Formats.BOOL,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.Exit, Characteristic);
+        Characteristic.Exit.UUID = "0f5b8eb2-ac7f-43d6-9246-559294d467c0";
+
+        ////////////////////////////////////////////////////////////////////////////
         // Home Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.Home = function() {
-            Characteristic.call(this, "Home", "e91cac16-c611-47a9-baef-cdea58b013ca");
+            Characteristic.call(this, "TV Home", "e91cac16-c611-47a9-baef-cdea58b013ca");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -112,6 +126,20 @@ class REMOTE {
         };
         inherits(Characteristic.Home, Characteristic);
         Characteristic.Home.UUID = "e91cac16-c611-47a9-baef-cdea58b013ca";
+
+        ////////////////////////////////////////////////////////////////////////////
+        // Confirm Characteristic
+        ////////////////////////////////////////////////////////////////////////////       
+        Characteristic.Confirm = function() {
+            Characteristic.call(this, "TV Confirm", "42b6d517-86c8-4d7a-9dad-4c62c4f59ae4");
+            this.setProps({
+                format: Characteristic.Formats.BOOL,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.Confirm, Characteristic);
+        Characteristic.Confirm.UUID = "42b6d517-86c8-4d7a-9dad-4c62c4f59ae4";
 
         ////////////////////////////////////////////////////////////////////////////
         // ChannelUp Characteristic
@@ -145,7 +173,7 @@ class REMOTE {
         // ControlUp Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.ControlUp = function() {
-            Characteristic.call(this, "Up", "f4b86abe-d0d2-45ad-bfe1-617d628b951f");
+            Characteristic.call(this, "TV Up", "f4b86abe-d0d2-45ad-bfe1-617d628b951f");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -156,10 +184,24 @@ class REMOTE {
         Characteristic.ControlUp.UUID = "f4b86abe-d0d2-45ad-bfe1-617d628b951f";
 
         ////////////////////////////////////////////////////////////////////////////
+        // NetflixButton Characteristic
+        ////////////////////////////////////////////////////////////////////////////       
+        Characteristic.NetflixButton = function() {
+            Characteristic.call(this, "Netflix Button", "a5d64dfb-0bcb-4dde-97f5-4ec76f320ad3");
+            this.setProps({
+                format: Characteristic.Formats.BOOL,
+                perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+            });
+            this.value = this.getDefaultValue();
+        };
+        inherits(Characteristic.NetflixButton, Characteristic);
+        Characteristic.NetflixButton.UUID = "a5d64dfb-0bcb-4dde-97f5-4ec76f320ad3";
+
+        ////////////////////////////////////////////////////////////////////////////
         // ControlDown Characteristic
         ////////////////////////////////////////////////////////////////////////////       
         Characteristic.ControlDown = function() {
-            Characteristic.call(this, "Down", "73ef568d-6770-4bc1-8225-9426b6826497");
+            Characteristic.call(this, "TV Down", "73ef568d-6770-4bc1-8225-9426b6826497");
             this.setProps({
                 format: Characteristic.Formats.BOOL,
                 perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -180,15 +222,18 @@ class REMOTE {
             this.addCharacteristic(Characteristic.Mute);
             this.addCharacteristic(Characteristic.VolumeUp);
             this.addCharacteristic(Characteristic.VolumeDown);
-            this.addCharacteristic(Characteristic.Enter);
-            this.addCharacteristic(Characteristic.Return);
 
             // Optional Characteristics
-            this.addOptionalCharacteristic(Characteristic.Home);
             this.addOptionalCharacteristic(Characteristic.ChannelUp);
             this.addOptionalCharacteristic(Characteristic.ChannelDown);
             this.addOptionalCharacteristic(Characteristic.ControlUp);
             this.addOptionalCharacteristic(Characteristic.ControlDown);
+            this.addOptionalCharacteristic(Characteristic.Enter);
+            this.addOptionalCharacteristic(Characteristic.Return);
+            this.addOptionalCharacteristic(Characteristic.Home);
+            this.addOptionalCharacteristic(Characteristic.Exit);
+            this.addOptionalCharacteristic(Characteristic.Confirm);
+            this.addOptionalCharacteristic(Characteristic.NetflixButton);
 
         };
         inherits(Service.RemoteControl, Service);
@@ -285,27 +330,35 @@ class REMOTE {
             .updateValue(false)
             .on('set', this.setVolumeDown.bind(this));
 
-        this.Control.getCharacteristic(Characteristic.Enter)
+        this.Control.getCharacteristic(Characteristic.ChannelUp)
             .updateValue(false)
-            .on('set', this.setEnter.bind(this));
+            .on('set', this.setChannelUp.bind(this));
 
-        this.Control.getCharacteristic(Characteristic.Return)
+        this.Control.getCharacteristic(Characteristic.ChannelDown)
             .updateValue(false)
-            .on('set', this.setReturn.bind(this));
+            .on('set', this.setChannelDown.bind(this));
 
         if (this.controlMode == "ADVANCED" || this.controlMode != "BASIC") {
+
+            this.Control.getCharacteristic(Characteristic.Enter)
+                .updateValue(false)
+                .on('set', this.setEnter.bind(this));
+
+            this.Control.getCharacteristic(Characteristic.Confirm)
+                .updateValue(false)
+                .on('set', this.setConfirm.bind(this));
+
+            this.Control.getCharacteristic(Characteristic.Return)
+                .updateValue(false)
+                .on('set', this.setReturn.bind(this));
+
+            this.Control.getCharacteristic(Characteristic.Exit)
+                .updateValue(false)
+                .on('set', this.setExit.bind(this));
 
             this.Control.getCharacteristic(Characteristic.Home)
                 .updateValue(false)
                 .on('set', this.setHome.bind(this));
-
-            this.Control.getCharacteristic(Characteristic.ChannelUp)
-                .updateValue(false)
-                .on('set', this.setChannelUp.bind(this));
-
-            this.Control.getCharacteristic(Characteristic.ChannelDown)
-                .updateValue(false)
-                .on('set', this.setChannelDown.bind(this));
 
             this.Control.getCharacteristic(Characteristic.ControlUp)
                 .updateValue(false)
@@ -314,6 +367,10 @@ class REMOTE {
             this.Control.getCharacteristic(Characteristic.ControlDown)
                 .updateValue(false)
                 .on('set', this.setControlDown.bind(this));
+
+            this.Control.getCharacteristic(Characteristic.NetflixButton)
+                .updateValue(false)
+                .on('set', this.setNetflixButton.bind(this));
 
         }
 
@@ -510,6 +567,58 @@ class REMOTE {
 
     }
 
+    setExit(state, callback) {
+
+        var self = this;
+
+        if (state) {
+            self.getContent('AAAAAQAAAAEAAABjAw==')
+                .then((data) => {
+                    self.log("Successfully send EXIT command.");
+                    setTimeout(function() {
+                        self.Control.getCharacteristic(Characteristic.Exit).updateValue(false);
+                    }, 500);
+                    callback(null, false)
+                })
+                .catch((err) => {
+                    self.log(self.name + ": Error: " + err);
+                    setTimeout(function() {
+                        self.Control.getCharacteristic(Characteristic.Exit).updateValue(false);
+                    }, 500);
+                    callback(null, false)
+                })
+        } else {
+            callback()
+        }
+
+    }
+
+    setConfirm(state, callback) {
+
+        var self = this;
+
+        if (state) {
+            self.getContent('AAAAAQAAAAEAAABlAw==')
+                .then((data) => {
+                    self.log("Successfully send CONFIRM command.");
+                    setTimeout(function() {
+                        self.Control.getCharacteristic(Characteristic.Confirm).updateValue(false);
+                    }, 500);
+                    callback(null, false)
+                })
+                .catch((err) => {
+                    self.log(self.name + ": Error: " + err);
+                    setTimeout(function() {
+                        self.Control.getCharacteristic(Characteristic.Confirm).updateValue(false);
+                    }, 500);
+                    callback(null, false)
+                })
+        } else {
+            callback()
+        }
+
+    }
+
     setChannelUp(state, callback) {
 
         var self = this;
@@ -613,6 +722,33 @@ class REMOTE {
         }
 
     }
+
+    setNetflixButton(state, callback) {
+
+        var self = this;
+
+        if (state) {
+            self.getContent('AAAAAgAAABoAAAB8Aw==')
+                .then((data) => {
+                    self.log("Successfully send NETFLIX BUTTON command.");
+                    setTimeout(function() {
+                        self.Control.getCharacteristic(Characteristic.NetflixButton).updateValue(false);
+                    }, 500);
+                    callback(null, false)
+                })
+                .catch((err) => {
+                    self.log(self.name + ": Error: " + err);
+                    setTimeout(function() {
+                        self.Control.getCharacteristic(Characteristic.NetflixButton).updateValue(false);
+                    }, 500);
+                    callback(null, false)
+                })
+        } else {
+            callback()
+        }
+
+    }
+
 
 }
 
