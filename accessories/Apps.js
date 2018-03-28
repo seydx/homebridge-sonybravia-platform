@@ -297,13 +297,13 @@ class APPS {
 
                     }
 
-                    self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);
+                    setTimeout(function(){self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);},500);
                     callback()
 
                 })
                 .catch((err) => {
                     self.log("Can't show Application list! " + err + ". Try again...");
-                    self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);
+                    setTimeout(function(){self.AppService.getCharacteristic(Characteristic.AppList).updateValue(false);},500);
                     callback()
                 });
 
