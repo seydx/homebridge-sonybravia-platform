@@ -85,6 +85,7 @@ After [Homebridge](https://github.com/nfarina/homebridge) has been installed:
   "volumeEnabled": true,
   "appsEnabled": true,
   "channelsEnabled":false,
+  "channelSource:"tv:dvbt",
   "inputsEnabled":true,
   "detectCEC":true,
   "offState": "HOME",
