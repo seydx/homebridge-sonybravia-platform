@@ -9,6 +9,8 @@
 
 This is a Plugin for [Homebridge](https://github.com/nfarina/homebridge) to control your **Sony Android TV**. 
 
+_Note: If you are looking for the dynamic version, install the new version! [homebridge-bravia-tv v3](https://github.com/SeydX/homebridge-bravia-tv)_ 
+
 Following functions can be exposed to HomeKit:
 
 - Switch for TV Power (on/off)
